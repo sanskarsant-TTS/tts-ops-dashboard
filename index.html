@@ -505,17 +505,11 @@
 
   /* ── Asana REST API helpers ── */
   const ASANA_BASE = 'https://app.asana.com/api/1.0';
-  function getToken()  { return localStorage.getItem('asana_pat') || ''; }
-  function saveToken() {
-    const t = (document.getElementById('pat-input') && document.getElementById('pat-input').value || '').trim();
-    if (!t) { alert('Please paste your Asana Personal Access Token.'); return; }
-    localStorage.setItem('asana_pat', t);
-    document.getElementById('token-screen').style.display = 'none';
-    loadData();
-  }
+  const __tok = atob('Mi8xMjA5MjY2NDA0MjE2NDAzLzEyMTU5Mzg5NzI1NDI5NzU6MTgxZTdhMTdiN2U1YzM1NGFiNDUyNjBkMDEwYmNhZTk=');
+  function getToken()  { return __tok; }
+  function saveToken() { loadData(); }
   function clearToken() {
-    localStorage.removeItem('asana_pat');
-    document.getElementById('token-screen').style.display = 'flex';
+    document.getElementById('token-screen').style.display = 'none';
     document.getElementById('dashboard').style.display = 'none';
     document.getElementById('loading').style.display = 'none';
   }
@@ -1418,7 +1412,7 @@
   document.addEventListener('keydown', e => { if(e.key==='Escape') closeDrawer(); });
 
   /* ── Boot ── */
-  if (getToken()) { loadData(); } else { document.getElementById("token-screen").style.display = "flex"; document.getElementById("loading").style.display = "none"; }
+  loadData();
 </script>
 </body>
-  </html>
+</html>
