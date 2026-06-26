@@ -232,14 +232,14 @@
       <div class="sub">blocked or deprioritized</div>
     </div>
     <div class="stat-card c-green">
-      <div class="lbl">Completed (30d)</div>
+      <div class="lbl">Completed</div>
       <div class="val" id="s-done">—</div>
       <div class="sub">recently closed out</div>
     </div>
     <div class="stat-card c-green">
       <div class="lbl">Avg. Completion</div>
       <div class="val" id="s-avg">—</div>
-      <div class="sub">days from create → done</div>
+      <div class="sub">days in queue → done</div>
     </div>
   </div>
 
@@ -332,7 +332,7 @@
   <!-- Completed tasks -->
   <div class="panel" style="margin-top:16px">
     <div class="ph">
-      <span class="ph-title">✅ Completed Tasks <span style="font-size:11px;font-weight:400;color:#94a3b8">· last 30 · click for details</span></span>
+      <span class="ph-title">✅ Completed Tasks <span style="font-size:11px;font-weight:400;color:#94a3b8">· last 100 · click for details</span></span>
       <span class="chip chip-green" id="done-chip">—</span>
     </div>
     <div class="pb" style="padding:14px 18px">
@@ -474,6 +474,14 @@
     { id: '1209599697198354', name: 'On Pause',       type: 'pause'      },
   ];
   const COMPLETED_SECTION    = '1209530436592404';
+  // GIDs of the 5 personal sections — used to detect when a task was queued to someone
+  const PERSON_SECTION_IDS = new Set([
+    '1209979150910954', // Sanskar
+    '1209979150910955', // Samarth
+    '1211025689948715', // Manish
+    '1213376054234244', // Saat
+    '1213137899442081', // Balkrishna
+  ]);
   const ACCOUNT_HEALTH_SECTION = { id: '1215680562815517', name: 'Account health / TTS', type: 'account-health' };
   const CORE_TEAM_SECTIONS   = [
     { id: '1213633121839981', name: 'TTS Ops // Core Teams', type: 'core-team'      },
@@ -505,11 +513,17 @@
 
   /* ── Asana REST API helpers ── */
   const ASANA_BASE = 'https://app.asana.com/api/1.0';
-  const __tok = atob('Mi8xMjA5MjY2NDA0MjE2NDAzLzEyMTU5Mzg5NzI1NDI5NzU6MTgxZTdhMTdiN2U1YzM1NGFiNDUyNjBkMDEwYmNhZTk=');
-  function getToken()  { return __tok; }
-  function saveToken() { loadData(); }
-  function clearToken() {
+  function getToken()  { return localStorage.getItem('asana_pat') || ''; }
+  function saveToken() {
+    const t = (document.getElementById('pat-input') && document.getElementById('pat-input').value || '').trim();
+    if (!t) { alert('Please paste your Asana Personal Access Token.'); return; }
+    localStorage.setItem('asana_pat', t);
     document.getElementById('token-screen').style.display = 'none';
+    loadData();
+  }
+  function clearToken() {
+    localStorage.removeItem('asana_pat');
+    document.getElementById('token-screen').style.display = 'flex';
     document.getElementById('dashboard').style.display = 'none';
     document.getElementById('loading').style.display = 'none';
   }
@@ -541,6 +555,26 @@
       if (e.name === 'AbortError') throw new Error('Request timed out');
       throw e;
     }
+  }
+
+
+  // Fetch Asana stories for a task and return the ISO timestamp when
+  // it was last moved into one of the 5 person sections (or null).
+  async function fetchSectionDate(gid, completedAt) {
+    try {
+      const res = await asanaFetch('/tasks/' + gid + '/stories', {
+        opt_fields: 'resource_subtype,created_at,new_value',
+        limit: 100
+      });
+      const moves = (res.data || [])
+        .filter(function(s) {
+          return s.new_value && s.new_value.section &&
+                 PERSON_SECTION_IDS.has(s.new_value.section.gid) &&
+                 (!completedAt || s.created_at <= completedAt);
+        })
+        .sort(function(a, b) { return b.created_at.localeCompare(a.created_at); });
+      return moves.length ? moves[0].created_at : null;
+    } catch(e) { return null; }
   }
 
   /* ── State ── */
@@ -641,7 +675,7 @@
       let name = brand || t.name;
       if (!brand && t.name.length>55) name = t.name.slice(0,55)+'…';
       const completedAt = t.completed_at ? t.completed_at.slice(0,10) : null;
-      const daysToComplete = daysBetween(t.created_at, t.completed_at);
+      const daysToComplete = daysBetween(t.sectionAssignedAt || t.created_at, t.completed_at);
       const category = extractCategory(t.notes||'');
       const scm      = extractSCM(t.notes||'');
       return { gid:t.gid, name, fullName:t.name, assignee:t.assignee?.name||null,
@@ -658,7 +692,7 @@
     document.getElementById('dashboard').style.display = 'none';
     allTasks = []; doneTasks = []; accountHealthTasks = []; coreTeamTasks = [];
 
-    const msgs = ['Connecting to Asana…','Fetching active tasks…','Fetching completed tasks…','Crunching numbers…'];
+    const msgs = ['Connecting to Asana…','Fetching active tasks…','Fetching completed tasks…','Loading task histories…','Crunching numbers…'];
     let mi=0;
     const ticker = setInterval(()=>{ document.getElementById('loading-msg').textContent=msgs[++mi%msgs.length]; },1300);
 
@@ -675,9 +709,15 @@
           try {
             const d = await asanaFetch('/sections/' + COMPLETED_SECTION + '/tasks', {
               opt_fields: 'name,assignee.name,completed,completed_at,created_at,notes,custom_fields.gid,custom_fields.display_value,custom_fields.text_value,permalink_url',
-              limit: 30
+              limit: 100
             });
-            return parseDoneTasks(d.data);
+            const raw = d.data || [];
+            // Fetch stories in parallel to get section-assignment date for each task
+            const sectionDates = await Promise.all(
+              raw.map(function(t) { return fetchSectionDate(t.gid, t.completed_at); })
+            );
+            raw.forEach(function(t, i) { t.sectionAssignedAt = sectionDates[i]; });
+            return parseDoneTasks(raw);
           } catch(e){ console.warn('Completed section failed',e); return []; }
         })(),
         (async function(){
@@ -729,7 +769,7 @@
                          .concat(coreTeamTasks.filter(t=>t.sectionType==='core-team-hold'));
     const p0         = active.filter(t=>t.priority==='P0 (Urgent)');
     const overdue    = allTasks.filter(t=>t.isOverdue);
-    const durations  = doneTasks.map(t=>t.daysToComplete).filter(d=>d!=null&&d>=0);
+    const durations  = doneTasks.map(t=>t.daysToComplete).filter(d=>d!=null&&d>=0&&d<=7);
     const avgDone    = durations.length ? Math.round(durations.reduce((a,b)=>a+b,0)/durations.length) : null;
 
     document.getElementById('s-active').textContent   = active.length;
@@ -762,8 +802,9 @@
         const odc     = mine.filter(t=>t.isOverdue).length;
         const col     = PERSON_COLORS[p];
         // Completed tasks assigned to this person + their avg timeline
-        const myDone  = doneTasks.filter(t=>t.assignee && t.assignee.split(' ')[0]===p);
-        const myDurs  = myDone.map(t=>t.daysToComplete).filter(d=>d!=null&&d>=0);
+        const cutoff  = new Date(Date.now()-7*24*60*60*1000).toISOString().slice(0,10);
+        const myDone  = doneTasks.filter(t=>t.assignee && t.assignee.split(' ')[0]===p && (t.completedAt||'') >= cutoff);
+        const myDurs  = myDone.map(t=>t.daysToComplete).filter(d=>d!=null&&d>=0&&d<=7);
         const avgDays = myDurs.length ? Math.round(myDurs.reduce((a,b)=>a+b,0)/myDurs.length) : null;
         return `<div class="person-card ${activePF===p?'active':''}" onclick="togglePerson('${p}')">
           <div class="p-avatar" style="background:${col}">${initials(p)}</div>
@@ -774,7 +815,7 @@
             ${odc ? `<span class="bdg bdg-od">⚠${odc}</span>` : ''}
           </div>
           <div class="p-stats" style="margin-top:6px">
-            <span class="bdg bdg-ok">✓ ${myDone.length} done</span>
+            <span class="bdg bdg-ok">✓ ${myDone.length} done (7d)</span>
             ${avgDays!=null ? `<span class="bdg" style="background:#f0fdf4;color:#15803d">~${avgDays}d avg</span>` : ''}
           </div>
         </div>`;
@@ -1011,7 +1052,7 @@
 
   /* ── Completed task rendering ── */
   function renderDoneStats() {
-    const durations = doneTasks.map(t=>t.daysToComplete).filter(d=>d!=null&&d>=0);
+    const durations = doneTasks.map(t=>t.daysToComplete).filter(d=>d!=null&&d>=0&&d<=7);
     if(!durations.length){ document.getElementById('done-stats').innerHTML=''; return; }
     const avg  = Math.round(durations.reduce((a,b)=>a+b,0)/durations.length);
     const fast = durations.filter(d=>d<=7).length;
@@ -1405,14 +1446,4 @@
     if(d<=7) return 'dur-fast'; if(d<=14) return 'dur-med'; return 'dur-slow';
   }
   function escHtmlEntities(s) {
-    return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  /* ── Close drawer on Escape ── */
-  document.addEventListener('keydown', e => { if(e.key==='Escape') closeDrawer(); });
-
-  /* ── Boot ── */
-  loadData();
-</script>
-</body>
-</html>
+    return (s||
