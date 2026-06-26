@@ -712,14 +712,7 @@
               limit: 100
             });
             const raw = d.data || [];
-            // Only fetch stories for tasks completed in last 7 days (rest are excluded from avg anyway)
-            const sevenDaysAgo = new Date(Date.now()-7*24*60*60*1000).toISOString().slice(0,10);
-            const recentRaw = raw.filter(function(t){ return (t.completed_at||'').slice(0,10) >= sevenDaysAgo; });
-            const sectionDates = await Promise.all(
-              recentRaw.map(function(t) { return fetchSectionDate(t.gid, t.completed_at); })
-            );
-            recentRaw.forEach(function(t, i) { t.sectionAssignedAt = sectionDates[i]; });
-            return parseDoneTasks(raw);
+            return parseDoneTasks(raw); // render fast; stories load in background
           } catch(e){ console.warn('Completed section failed',e); return []; }
         })(),
         (async function(){
@@ -758,6 +751,25 @@
     document.getElementById('loading').style.display='none';
     document.getElementById('dashboard').style.display='block';
     btn.disabled=false;
+
+    // Background: enrich 7d completed tasks with section-assignment dates sequentially
+    // (sequential to avoid rate-limiting; updates workload cards as results come in)
+    (async function() {
+      const sevenDaysAgo = new Date(Date.now()-7*24*60*60*1000).toISOString().slice(0,10);
+      const recent = doneTasks.filter(function(t){ return (t.completedAt||'') >= sevenDaysAgo; });
+      let updated = false;
+      for (var i = 0; i < recent.length; i++) {
+        var t = recent[i];
+        if (t.sectionAssignedAt) continue; // already have it
+        var dt = await fetchSectionDate(t.gid, t.completedAt);
+        if (dt) {
+          t.sectionAssignedAt = dt;
+          t.daysToComplete = daysBetween(dt, t.completedAt);
+          updated = true;
+        }
+      }
+      if (updated) renderWorkload(); // re-render cards with refined durations
+    })();
   }
 
   /* ── Render everything ── */
