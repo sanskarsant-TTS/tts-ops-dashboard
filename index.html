@@ -712,11 +712,13 @@
               limit: 100
             });
             const raw = d.data || [];
-            // Fetch stories in parallel to get section-assignment date for each task
+            // Only fetch stories for tasks completed in last 7 days (rest are excluded from avg anyway)
+            const sevenDaysAgo = new Date(Date.now()-7*24*60*60*1000).toISOString().slice(0,10);
+            const recentRaw = raw.filter(function(t){ return (t.completed_at||'').slice(0,10) >= sevenDaysAgo; });
             const sectionDates = await Promise.all(
-              raw.map(function(t) { return fetchSectionDate(t.gid, t.completed_at); })
+              recentRaw.map(function(t) { return fetchSectionDate(t.gid, t.completed_at); })
             );
-            raw.forEach(function(t, i) { t.sectionAssignedAt = sectionDates[i]; });
+            recentRaw.forEach(function(t, i) { t.sectionAssignedAt = sectionDates[i]; });
             return parseDoneTasks(raw);
           } catch(e){ console.warn('Completed section failed',e); return []; }
         })(),
