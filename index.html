@@ -540,46 +540,21 @@
     var url = new URL(ASANA_BASE + path);
     Object.keys(params).forEach(function(k) { url.searchParams.set(k, String(params[k])); });
     var controller = new AbortController();
-    var timeout = setTimeout(function() { controller.abort(); }, 15000);
+    var timeout = setTimeout(function() { controller.abort(); }, 12000);
     try {
       var r = await fetch(url.toString(), {
         headers: { Authorization: 'Bearer ' + getToken(), Accept: 'application/json' },
         signal: controller.signal
       });
-      if (r.status === 401) { clearTimeout(timeout); clearToken(); throw new Error('Invalid token'); }
-      if (!r.ok) { clearTimeout(timeout); throw new Error('Asana API ' + r.status); }
-      // Race r.json() against a separate timeout — body streaming can hang even after headers arrive
-      var json = await Promise.race([
-        r.json(),
-        new Promise(function(_, reject) { setTimeout(function() { reject(new Error('Request timed out')); }, 10000); })
-      ]);
       clearTimeout(timeout);
-      return json;
+      if (r.status === 401) { clearToken(); throw new Error('Invalid token'); }
+      if (!r.ok) throw new Error('Asana API ' + r.status);
+      return r.json();
     } catch(e) {
       clearTimeout(timeout);
       if (e.name === 'AbortError') throw new Error('Request timed out');
       throw e;
     }
-  }
-
-
-  // Fetch Asana stories for a task and return the ISO timestamp when
-  // it was last moved into one of the 5 person sections (or null).
-  async function fetchSectionDate(gid, completedAt) {
-    try {
-      const res = await asanaFetch('/tasks/' + gid + '/stories', {
-        opt_fields: 'resource_subtype,created_at,new_value',
-        limit: 100
-      });
-      const moves = (res.data || [])
-        .filter(function(s) {
-          return s.new_value && s.new_value.section &&
-                 PERSON_SECTION_IDS.has(s.new_value.section.gid) &&
-                 (!completedAt || s.created_at <= completedAt);
-        })
-        .sort(function(a, b) { return b.created_at.localeCompare(a.created_at); });
-      return moves.length ? moves[0].created_at : null;
-    } catch(e) { return null; }
   }
 
   /* ── State ── */
@@ -714,10 +689,10 @@
           try {
             const d = await asanaFetch('/sections/' + COMPLETED_SECTION + '/tasks', {
               opt_fields: 'name,assignee.name,completed,completed_at,created_at,notes,custom_fields.gid,custom_fields.display_value,custom_fields.text_value,permalink_url',
-              limit: 50
+              limit: 30
             });
             const raw = d.data || [];
-            return parseDoneTasks(raw); // render fast; stories load in background
+            return parseDoneTasks(raw);
           } catch(e){ console.warn('Completed section failed',e); return []; }
         })(),
         (async function(){
@@ -756,25 +731,6 @@
     document.getElementById('loading').style.display='none';
     document.getElementById('dashboard').style.display='block';
     btn.disabled=false;
-
-    // Background: enrich 7d completed tasks with section-assignment dates sequentially
-    // (sequential to avoid rate-limiting; updates workload cards as results come in)
-    (async function() {
-      const sevenDaysAgo = new Date(Date.now()-7*24*60*60*1000).toISOString().slice(0,10);
-      const recent = doneTasks.filter(function(t){ return (t.completedAt||'') >= sevenDaysAgo; });
-      let updated = false;
-      for (var i = 0; i < recent.length; i++) {
-        var t = recent[i];
-        if (t.sectionAssignedAt) continue; // already have it
-        var dt = await fetchSectionDate(t.gid, t.completedAt);
-        if (dt) {
-          t.sectionAssignedAt = dt;
-          t.daysToComplete = daysBetween(dt, t.completedAt);
-          updated = true;
-        }
-      }
-      if (updated) renderWorkload(); // re-render cards with refined durations
-    })();
   }
 
   /* ── Render everything ── */
