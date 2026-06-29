@@ -714,7 +714,7 @@
           try {
             const d = await asanaFetch('/sections/' + COMPLETED_SECTION + '/tasks', {
               opt_fields: 'name,assignee.name,completed,completed_at,created_at,notes,custom_fields.gid,custom_fields.display_value,custom_fields.text_value,permalink_url',
-              limit: 100
+              limit: 50
             });
             const raw = d.data || [];
             return parseDoneTasks(raw); // render fast; stories load in background
