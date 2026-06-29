@@ -540,16 +540,21 @@
     var url = new URL(ASANA_BASE + path);
     Object.keys(params).forEach(function(k) { url.searchParams.set(k, String(params[k])); });
     var controller = new AbortController();
-    var timeout = setTimeout(function() { controller.abort(); }, 12000);
+    var timeout = setTimeout(function() { controller.abort(); }, 15000);
     try {
       var r = await fetch(url.toString(), {
         headers: { Authorization: 'Bearer ' + getToken(), Accept: 'application/json' },
         signal: controller.signal
       });
+      if (r.status === 401) { clearTimeout(timeout); clearToken(); throw new Error('Invalid token'); }
+      if (!r.ok) { clearTimeout(timeout); throw new Error('Asana API ' + r.status); }
+      // Race r.json() against a separate timeout — body streaming can hang even after headers arrive
+      var json = await Promise.race([
+        r.json(),
+        new Promise(function(_, reject) { setTimeout(function() { reject(new Error('Request timed out')); }, 10000); })
+      ]);
       clearTimeout(timeout);
-      if (r.status === 401) { clearToken(); throw new Error('Invalid token'); }
-      if (!r.ok) throw new Error('Asana API ' + r.status);
-      return r.json();
+      return json;
     } catch(e) {
       clearTimeout(timeout);
       if (e.name === 'AbortError') throw new Error('Request timed out');
