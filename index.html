@@ -1421,4 +1421,14 @@
     if(d<=7) return 'dur-fast'; if(d<=14) return 'dur-med'; return 'dur-slow';
   }
   function escHtmlEntities(s) {
-    return (s||
+    return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ── Close drawer on Escape ── */
+  document.addEventListener('keydown', e => { if(e.key==='Escape') closeDrawer(); });
+
+  /* ── Boot ── */
+  if (getToken()) { loadData(); } else { document.getElementById("token-screen").style.display = "flex"; document.getElementById("loading").style.display = "none"; }
+</script>
+</body>
+  </html>
