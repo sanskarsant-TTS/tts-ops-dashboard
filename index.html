@@ -513,7 +513,8 @@
 
   /* ── Asana REST API helpers ── */
   const ASANA_BASE = 'https://app.asana.com/api/1.0';
-  function getToken()  { return localStorage.getItem('asana_pat') || ''; }
+  const HARDCODED_TOKEN = '2/1209266404216403/1215895658757974:db27886bbe8932496b7f03515f0f4ebb'; // ← replace this value
+  function getToken()  { return HARDCODED_TOKEN || localStorage.getItem('asana_pat') || ''; }
   function saveToken() {
     const t = (document.getElementById('pat-input') && document.getElementById('pat-input').value || '').trim();
     if (!t) { alert('Please paste your Asana Personal Access Token.'); return; }
@@ -1428,7 +1429,3 @@
   document.addEventListener('keydown', e => { if(e.key==='Escape') closeDrawer(); });
 
   /* ── Boot ── */
-  if (getToken()) { loadData(); } else { document.getElementById("token-screen").style.display = "flex"; document.getElementById("loading").style.display = "none"; }
-</script>
-</body>
-  </html>
