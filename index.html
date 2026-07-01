@@ -232,9 +232,19 @@
       <div class="sub">blocked or deprioritized</div>
     </div>
     <div class="stat-card c-green">
-      <div class="lbl">Completed</div>
-      <div class="val" id="s-done">—</div>
-      <div class="sub">recently closed out</div>
+      <div class="lbl">Done (1d)</div>
+      <div class="val" id="s-done-1d">—</div>
+      <div class="sub">completed today</div>
+    </div>
+    <div class="stat-card c-green">
+      <div class="lbl">Done (7d)</div>
+      <div class="val" id="s-done-7d">—</div>
+      <div class="sub">last 7 days</div>
+    </div>
+    <div class="stat-card c-green">
+      <div class="lbl">Done (30d)</div>
+      <div class="val" id="s-done-30d">—</div>
+      <div class="sub">last 30 days</div>
     </div>
     <div class="stat-card c-green">
       <div class="lbl">Avg. Completion</div>
@@ -651,7 +661,10 @@
   }
 
   function parseDoneTasks(raw) {
-    return (raw||[]).map(t=>{
+    return (raw||[])
+      .filter(t => !t.parent)  // exclude sub-tasks
+      .filter(t => !t.name.startsWith('V-') && !t.name.startsWith('W-'))  // exclude account health
+      .map(t=>{
       const priority = getCF(t,PRI_GID), brand = getCF(t,BRAND_GID);
       let name = brand || t.name;
       if (!brand && t.name.length>55) name = t.name.slice(0,55)+'…';
@@ -689,8 +702,8 @@
         (async function(){
           try {
             const d = await asanaFetch('/sections/' + COMPLETED_SECTION + '/tasks', {
-              opt_fields: 'name,assignee.name,completed,completed_at,created_at,notes,custom_fields.gid,custom_fields.display_value,custom_fields.text_value,permalink_url',
-              limit: 30
+              opt_fields: 'name,assignee.name,completed,completed_at,created_at,notes,parent,custom_fields.gid,custom_fields.display_value,custom_fields.text_value,permalink_url',
+              limit: 100
             });
             const raw = d.data || [];
             return parseDoneTasks(raw);
@@ -752,7 +765,12 @@
     document.getElementById('s-p0').textContent       = p0.length;
     document.getElementById('s-overdue').textContent  = overdue.length;
     document.getElementById('s-hold').textContent     = hold.length;
-    document.getElementById('s-done').textContent     = doneTasks.length;
+    const todayStr  = today();
+    const cut7d     = new Date(Date.now() -  7*24*60*60*1000).toISOString().slice(0,10);
+    const cut30d    = new Date(Date.now() - 30*24*60*60*1000).toISOString().slice(0,10);
+    document.getElementById('s-done-1d').textContent  = doneTasks.filter(t=>t.completedAt >= todayStr).length;
+    document.getElementById('s-done-7d').textContent  = doneTasks.filter(t=>t.completedAt >= cut7d).length;
+    document.getElementById('s-done-30d').textContent = doneTasks.filter(t=>t.completedAt >= cut30d).length;
     document.getElementById('s-avg').textContent      = avgDone!=null ? avgDone+'d' : '—';
 
     renderWorkload();
