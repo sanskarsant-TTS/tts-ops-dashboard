@@ -491,6 +491,8 @@
     '1211025689948715', // Manish
     '1213376054234244', // Saat
     '1213137899442081', // Balkrishna
+  '1216304293577067', // Riya
+  '1216368240915403', // Andres
   ]);
   const ACCOUNT_HEALTH_SECTION = { id: '1215680562815517', name: 'Account health / TTS', type: 'account-health' };
   const CORE_TEAM_SECTIONS   = [
@@ -501,7 +503,7 @@
   const PRI_GID   = '1209526689276187';
   const BRAND_GID = '1209530437349795';
 
-  const PERSON_COLORS = { Sanskar:'#6366f1',Samarth:'#0ea5e9',Manish:'#10b981',Saat:'#f59e0b',Balkrishna:'#ec4899' };
+  const PERSON_COLORS = { Sanskar:'#6366f1',Samarth:'#0ea5e9',Manish:'#10b981',Saat:'#f59e0b',Balkrishna:'#ec4899',Riya:'#f43f5e',Andres:'#06b6d4' };
   const CATEGORIES = [
     '3P Brands TTS Listings',
     'Shelf TTS Listings',
@@ -788,7 +790,7 @@
 
   function renderWorkload() {
     document.getElementById('workload-grid').innerHTML =
-      ['Sanskar','Samarth','Manish','Saat','Balkrishna'].map(p=>{
+      ['Sanskar','Samarth','Manish','Saat','Balkrishna','Riya','Andres'].map(p=>{
         // ONLY count tasks from this person's own active section
         // On Pause / On Hold tasks are excluded — they belong to their own columns
         const mine    = allTasks.filter(t=>t.sectionName===p && t.sectionType==='active');
