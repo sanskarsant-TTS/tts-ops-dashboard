@@ -717,11 +717,15 @@
         })),
         (async function(){
           try {
-            const d = await asanaFetch('/sections/' + COMPLETED_SECTION + '/tasks', {
-              opt_fields: 'name,assignee.name,completed,completed_at,created_at,notes,parent,followers,custom_fields.gid,custom_fields.display_value,custom_fields.text_value,permalink_url',
-              limit: 200
-            });
-            const raw = d.data || [];
+            const DONE_FIELDS = 'name,assignee.name,completed,completed_at,created_at,notes,parent,followers,custom_fields.gid,custom_fields.display_value,custom_fields.text_value,permalink_url';
+            const p1 = await asanaFetch('/sections/' + COMPLETED_SECTION + '/tasks', { opt_fields: DONE_FIELDS, limit: 100 });
+            let raw = p1.data || [];
+            if (p1.next_page && p1.next_page.offset) {
+              try {
+                const p2 = await asanaFetch('/sections/' + COMPLETED_SECTION + '/tasks', { opt_fields: DONE_FIELDS, limit: 100, offset: p1.next_page.offset });
+                raw = raw.concat(p2.data || []);
+              } catch(e){ console.warn('Completed page 2 failed', e); }
+            }
             return parseDoneTasks(raw);
           } catch(e){ console.warn('Completed section failed',e); return []; }
         })(),
