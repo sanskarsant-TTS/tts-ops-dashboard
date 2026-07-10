@@ -718,7 +718,7 @@
         (async function(){
           try {
             const d = await asanaFetch('/sections/' + COMPLETED_SECTION + '/tasks', {
-              opt_fields: 'name,assignee.name,completed,completed_at,created_at,notes,parent,followers.name,custom_fields.gid,custom_fields.display_value,custom_fields.text_value,permalink_url',
+              opt_fields: 'name,assignee.name,completed,completed_at,created_at,notes,parent,followers,custom_fields.gid,custom_fields.display_value,custom_fields.text_value,permalink_url',
               limit: 200
             });
             const raw = d.data || [];
