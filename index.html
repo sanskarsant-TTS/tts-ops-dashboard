@@ -664,10 +664,22 @@
     return cats[0]; // fallback: raw first line
   }
 
+  // Core ops team first names — used to check follower involvement
+  const CORE_TEAM_NAMES = new Set(['Sanskar','Samarth','Manish','Saat','Balkrishna','Riya','Andres']);
+  function hasCoreTeamFollower(followers) {
+    return (followers||[]).some(f => CORE_TEAM_NAMES.has((f.name||'').split(' ')[0]));
+  }
+
   function parseDoneTasks(raw) {
     return (raw||[])
-      .filter(t => !t.parent)  // exclude sub-tasks
-      .filter(t => !t.name.startsWith('V-') && !t.name.startsWith('W-'))  // exclude account health
+      .filter(t => {
+        const isSubTask      = !!t.parent;
+        const isAcctHealth   = t.name.startsWith('V-') || t.name.startsWith('W-');
+        // Standard top-level ops task — always include
+        if (!isSubTask && !isAcctHealth) return true;
+        // Sub-tasks or account health — include only if a core team member is in followers
+        return hasCoreTeamFollower(t.followers);
+      })
       .map(t=>{
       const priority = getCF(t,PRI_GID), brand = getCF(t,BRAND_GID);
       let name = brand || t.name;
@@ -706,8 +718,8 @@
         (async function(){
           try {
             const d = await asanaFetch('/sections/' + COMPLETED_SECTION + '/tasks', {
-              opt_fields: 'name,assignee.name,completed,completed_at,created_at,notes,parent,custom_fields.gid,custom_fields.display_value,custom_fields.text_value,permalink_url',
-              limit: 100
+              opt_fields: 'name,assignee.name,completed,completed_at,created_at,notes,parent,followers.name,custom_fields.gid,custom_fields.display_value,custom_fields.text_value,permalink_url',
+              limit: 200
             });
             const raw = d.data || [];
             return parseDoneTasks(raw);
