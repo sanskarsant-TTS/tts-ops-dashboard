@@ -181,49 +181,122 @@
     .tab-btn:hover { color: #cbd5e1; }
     .tab-btn.active { color: #fff; border-bottom-color: #6366f1; }
 
+
     /* ── Onboarding Dashboard ── */
     #onboarding-dashboard { display: none; padding: 20px 24px; }
-    .ob-summary-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
-    .ob-pipeline-wrap { background: white; border-radius: 10px; border: 1px solid #e2e8f0; padding: 16px 20px; margin-bottom: 22px; }
-    .ob-pipeline-title { font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px; }
-    .ob-stage-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-    .ob-stage-label { width: 195px; font-size: 12px; color: #475569; text-align: right; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .ob-stage-bar-wrap { flex: 1; background: #f1f5f9; border-radius: 4px; height: 20px; overflow: hidden; }
-    .ob-stage-bar { height: 100%; border-radius: 4px; min-width: 3px; transition: width 0.5s ease; }
-    .ob-stage-count { font-size: 12px; font-weight: 600; color: #334155; width: 24px; text-align: right; }
-    .ob-stage-zero .ob-stage-count { color: #cbd5e1; }
-    .bar-blocked { background: linear-gradient(90deg,#f87171,#ef4444); }
-    .bar-waiting  { background: linear-gradient(90deg,#fbbf24,#f59e0b); }
-    .bar-live     { background: linear-gradient(90deg,#34d399,#10b981); }
-    .bar-default  { background: linear-gradient(90deg,#818cf8,#6366f1); }
-    .ob-brands-table { width: 100%; border-collapse: collapse; font-size: 12.5px; background: white; border-radius: 10px; overflow: hidden; border: 1px solid #e2e8f0; }
-    .ob-brands-table th { background: #f8fafc; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; padding: 10px 14px; text-align: left; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
-    .ob-brands-table td { padding: 10px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-    .ob-brands-table tr:last-child td { border-bottom: none; }
-    .ob-brands-table tr:hover td { background: #fafbfc; }
-    .ob-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; white-space: nowrap; }
-    .ob-badge-blocked  { background: #fee2e2; color: #dc2626; }
-    .ob-badge-paused   { background: #ffedd5; color: #ea580c; }
-    .ob-badge-waiting  { background: #fef3c7; color: #d97706; }
-    .ob-badge-live     { background: #d1fae5; color: #059669; }
-    .ob-badge-active   { background: #dbeafe; color: #2563eb; }
-    .ob-badge-default  { background: #f1f5f9; color: #64748b; }
-    .ob-section-lbl { font-size: 13px; font-weight: 600; color: #334155; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
-    .ob-chip { font-size: 11px; font-weight: 500; background: #f1f5f9; color: #64748b; padding: 2px 8px; border-radius: 20px; }
-    .ob-empty { color: #94a3b8; font-size: 13px; padding: 20px; text-align: center; }
-    .ob-link { color: #6366f1; text-decoration: none; font-size: 11px; }
-    .ob-link:hover { text-decoration: underline; }
-    .ob-days { font-size: 12px; font-weight: 600; }
-    .ob-days.d-fast { color: #16a34a; }
-    .ob-days.d-med  { color: #d97706; }
-    .ob-days.d-slow { color: #dc2626; }
-    .ob-filter-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
-    .ob-filter-btn { padding: 5px 14px; font-size: 12px; border: 1px solid #e2e8f0; border-radius: 20px; background: white; color: #64748b; cursor: pointer; transition: all 0.15s; }
-    .ob-filter-btn:hover { border-color: #6366f1; color: #6366f1; }
-    .ob-filter-btn.active { background: #6366f1; color: white; border-color: #6366f1; }
-    .ob-inline-loading { display: none; align-items: center; justify-content: center; gap: 10px; padding: 40px; color: #64748b; font-size: 13px; }
-    .ob-inline-loading .spinner { width: 22px; height: 22px; border-width: 2px; }
+
+    /* Pipeline flow */
+    .ob-flow { display:flex; align-items:stretch; gap:0; margin-bottom:22px; overflow-x:auto; padding:2px 0; }
+    .ob-flow-step { display:flex; align-items:center; flex:1; min-width:90px; }
+    .ob-flow-pill { flex:1; text-align:center; padding:11px 8px 9px; border-radius:8px; font-size:11px; font-weight:600; cursor:pointer; background:#f1f5f9; color:#64748b; border:2px solid transparent; transition:all 0.15s; }
+    .ob-flow-pill:hover { background:#e2e8f0; }
+    .ob-flow-pill.fp-active { background:#6366f1!important; color:white!important; border-color:#4f46e5!important; }
+    .ob-flow-pill.fp-blocked { background:#fee2e2; color:#dc2626; border-color:#fecaca; }
+    .ob-flow-pill.fp-waiting { background:#fef3c7; color:#d97706; border-color:#fde68a; }
+    .ob-flow-pill.fp-live    { background:#d1fae5; color:#059669; border-color:#a7f3d0; }
+    .ob-flow-pill .fp-cnt { font-size:22px; font-weight:700; display:block; line-height:1.1; }
+    .ob-flow-pill .fp-lbl { font-size:10.5px; display:block; margin-top:2px; }
+    .ob-flow-arrow { color:#cbd5e1; font-size:18px; padding:0 2px; flex-shrink:0; align-self:center; }
+
+    /* Stat cards */
+    .ob-summary-row { display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-bottom:20px; }
+
+    /* Two-col grid */
+    .ob-two-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:18px; }
+    .ob-panel { background:white; border-radius:10px; border:1px solid #e2e8f0; padding:16px 20px; }
+    .ob-panel-title { font-size:11px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:.06em; margin-bottom:12px; }
+
+    /* Stage bars */
+    .ob-bar-row { display:flex; align-items:center; gap:8px; margin-bottom:7px; cursor:pointer; border-radius:6px; padding:3px 4px; transition:background .1s; }
+    .ob-bar-row:hover { background:#f8fafc; }
+    .ob-bar-row.ob-sel { background:#eef2ff; }
+    .ob-bar-lbl { font-size:11.5px; color:#475569; width:150px; flex-shrink:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ob-bar-track { flex:1; background:#f1f5f9; border-radius:4px; height:16px; overflow:hidden; }
+    .ob-bar-fill { height:100%; border-radius:4px; }
+    .ob-bar-num { font-size:12px; font-weight:600; color:#334155; width:22px; text-align:right; }
+
+    /* Blocker attribution */
+    .ob-attr-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; cursor:pointer; border-radius:6px; padding:4px 6px; transition:background .1s; }
+    .ob-attr-row:hover { background:#f8fafc; }
+    .ob-attr-row.ob-sel { background:#eef2ff; }
+    .ob-attr-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .ob-attr-lbl { font-size:12px; color:#475569; flex:1; }
+    .ob-attr-bar-wrap { width:80px; background:#f1f5f9; border-radius:4px; height:8px; overflow:hidden; }
+    .ob-attr-bar { height:100%; border-radius:4px; }
+    .ob-attr-pct { font-size:12px; font-weight:700; color:#334155; width:32px; text-align:right; }
+
+    /* Brand type breakdown */
+    .ob-type-grid { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px; }
+    .ob-type-card { background:white; border:1px solid #e2e8f0; border-radius:8px; padding:10px 16px; flex:1; min-width:110px; }
+    .ob-type-name { font-size:10px; color:#64748b; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ob-type-days { font-size:20px; font-weight:700; color:#1e293b; line-height:1; }
+    .ob-type-cnt  { font-size:11px; color:#94a3b8; margin-top:3px; }
+
+    /* Avatar */
+    .ob-av { display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; font-size:9.5px; font-weight:700; color:white; flex-shrink:0; }
+
+    /* Step progress dots */
+    .ob-progress { display:flex; align-items:center; gap:3px; white-space:nowrap; }
+    .ob-progress-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .ob-progress-dot.dp-filled { background:#6366f1; }
+    .ob-progress-dot.dp-empty  { background:#e2e8f0; }
+    .ob-progress-dot.dp-paused { background:#f87171; }
+    .ob-progress-label { font-size:10px; color:#94a3b8; margin-left:5px; }
+
+    /* Brands table */
+    .ob-brands-table { width:100%; border-collapse:collapse; font-size:12.5px; background:white; border-radius:10px; overflow:hidden; border:1px solid #e2e8f0; margin-bottom:24px; }
+    .ob-brands-table th { background:#f8fafc; color:#64748b; font-size:11px; text-transform:uppercase; letter-spacing:.04em; padding:10px 14px; text-align:left; border-bottom:1px solid #e2e8f0; white-space:nowrap; }
+    .ob-brands-table th.sortable { cursor:pointer; user-select:none; }
+    .ob-brands-table th.sortable:hover { color:#1e293b; }
+    .ob-brands-table td { padding:9px 14px; border-bottom:1px solid #f1f5f9; vertical-align:middle; }
+    .ob-brands-table tr:last-child td { border-bottom:none; }
+    .ob-brands-table tr:hover td { background:#fafbfc; }
+    .ob-badge { display:inline-block; padding:2px 8px; border-radius:20px; font-size:10.5px; font-weight:500; white-space:nowrap; }
+    .ob-badge-none    { background:#f1f5f9; color:#64748b; }
+    .ob-badge-tiktok  { background:#fee2e2; color:#dc2626; }
+    .ob-badge-brand   { background:#fef3c7; color:#d97706; }
+    .ob-badge-pattern { background:#ede9fe; color:#7c3aed; }
+    .ob-days { font-size:12px; font-weight:700; }
+    .ob-days.d-fast { color:#16a34a; }
+    .ob-days.d-med  { color:#d97706; }
+    .ob-days.d-slow { color:#dc2626; }
+    .ob-link { color:#6366f1; text-decoration:none; font-size:12px; }
+    .ob-link:hover { text-decoration:underline; }
+    .ob-empty { color:#94a3b8; font-size:13px; padding:20px; text-align:center; }
+
+    /* Filter row */
+    .ob-filter-row { display:flex; gap:7px; flex-wrap:wrap; }
+    .ob-filter-btn { padding:5px 13px; font-size:12px; border:1px solid #e2e8f0; border-radius:20px; background:white; color:#64748b; cursor:pointer; transition:all .15s; }
+    .ob-filter-btn:hover { border-color:#6366f1; color:#6366f1; }
+    .ob-filter-btn.ob-f-active { background:#6366f1; color:white; border-color:#6366f1; }
+
+    /* Ops workload */
+    .ob-workload-grid { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:24px; }
+    .ob-wl-card { background:white; border:1px solid #e2e8f0; border-radius:10px; padding:12px 16px; min-width:120px; cursor:pointer; transition:border-color .15s; }
+    .ob-wl-card:hover { border-color:#6366f1; }
+    .ob-wl-card.ob-sel { border-color:#6366f1; background:#eef2ff; }
+    .ob-wl-top { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+    .ob-wl-name { font-size:12px; font-weight:600; color:#1e293b; }
+    .ob-wl-stats { font-size:11px; color:#64748b; display:flex; flex-direction:column; gap:2px; }
+    .ob-wl-stat { display:flex; justify-content:space-between; gap:12px; }
+    .ob-wl-val  { font-weight:600; color:#1e293b; }
+
+    /* Urgent callout */
+    .ob-urgent-bar { background:#fff7ed; border:1px solid #fed7aa; border-radius:8px; padding:9px 16px; margin-bottom:18px; font-size:12.5px; color:#c2410c; display:flex; align-items:center; gap:8px; }
+
+    /* Completed table */
+    .ob-done-tbl { width:100%; border-collapse:collapse; font-size:12.5px; background:white; border-radius:10px; overflow:hidden; border:1px solid #e2e8f0; }
+    .ob-done-tbl th { background:#f0fdf4; color:#16a34a; font-size:11px; text-transform:uppercase; letter-spacing:.04em; padding:10px 14px; text-align:left; border-bottom:1px solid #d1fae5; }
+    .ob-done-tbl td { padding:9px 14px; border-bottom:1px solid #f1f5f9; vertical-align:middle; }
+    .ob-done-tbl tr:last-child td { border-bottom:none; }
+    .ob-done-tbl tr:hover td { background:#f0fdf4; }
+
+    /* Inline loading */
+    .ob-inline-loading { display:none; align-items:center; justify-content:center; gap:10px; padding:60px; color:#64748b; font-size:13px; }
+    .ob-inline-loading .spinner { width:22px; height:22px; border-width:2px; }
+
   </style>
+
 </head>
 <body>
 
@@ -510,7 +583,6 @@
 <!-- Onboarding Dashboard -->
 <div id="onboarding-dashboard">
 
-  <!-- Inline loading -->
   <div class="ob-inline-loading" id="ob-loading">
     <div class="spinner"></div>
     <span>Loading Onboarding 2026 data…</span>
@@ -518,57 +590,88 @@
 
   <div id="ob-content" style="display:none">
 
-    <!-- Stats -->
+    <!-- Pipeline flow -->
+    <div class="ob-flow" id="ob-flow"></div>
+
+    <!-- Stat cards -->
     <div class="ob-summary-row">
       <div class="stat-card c-blue">
-        <div class="lbl">Active Brands</div>
+        <div class="lbl">Total Active</div>
         <div class="val" id="ob-s-active">—</div>
         <div class="sub">in pipeline</div>
       </div>
+      <div class="stat-card" style="border-color:#e2e8f0">
+        <div class="lbl">Avg Days</div>
+        <div class="val" id="ob-s-avgdays" style="color:#334155">—</div>
+        <div class="sub">since signed</div>
+      </div>
       <div class="stat-card" style="border-color:#fee2e2">
-        <div class="lbl">Blocked / Paused</div>
-        <div class="val" id="ob-s-blocked" style="color:#ef4444">—</div>
-        <div class="sub">need attention</div>
+        <div class="lbl">Blocked by TikTok</div>
+        <div class="val" id="ob-s-ttok" style="color:#ef4444">—</div>
+        <div class="sub">approval delays</div>
       </div>
       <div class="stat-card" style="border-color:#fef3c7">
-        <div class="lbl">Waiting</div>
-        <div class="val" id="ob-s-waiting" style="color:#f59e0b">—</div>
-        <div class="sub">inventory / TikTok</div>
+        <div class="lbl">Blocked by Brand</div>
+        <div class="val" id="ob-s-brand" style="color:#f59e0b">—</div>
+        <div class="sub">missing info</div>
+      </div>
+      <div class="stat-card" style="border-color:#ede9fe">
+        <div class="lbl">In Binding</div>
+        <div class="val" id="ob-s-binding" style="color:#7c3aed">—</div>
+        <div class="sub">awaiting contract</div>
       </div>
       <div class="stat-card" style="border-color:#d1fae5">
-        <div class="lbl">Final Check / Live</div>
+        <div class="lbl">Final Check/Live</div>
         <div class="val" id="ob-s-live" style="color:#10b981">—</div>
         <div class="sub">almost there</div>
       </div>
     </div>
 
-    <!-- Pipeline visual -->
-    <div class="ob-pipeline-wrap">
-      <div class="ob-pipeline-title">Pipeline Stages</div>
-      <div id="ob-pipeline-stages"></div>
+    <!-- Urgent callout -->
+    <div class="ob-urgent-bar" id="ob-urgent" style="display:none">
+      ⚠ <span id="ob-urgent-text"></span>
     </div>
 
-    <!-- Filter row + Brands table -->
-    <div class="ob-section-lbl">
-      All Active Brands
-      <span class="ob-chip" id="ob-brands-count">—</span>
+    <!-- Stage bars + Blocker attribution -->
+    <div class="ob-two-grid">
+      <div class="ob-panel">
+        <div class="ob-panel-title">Pipeline by stage <span style="color:#94a3b8;font-size:10px;text-transform:none;letter-spacing:0">(click to filter)</span></div>
+        <div id="ob-stage-bars"></div>
+      </div>
+      <div class="ob-panel">
+        <div class="ob-panel-title">Blocker attribution <span style="color:#94a3b8;font-size:10px;text-transform:none;letter-spacing:0">(click to filter)</span></div>
+        <div id="ob-blocker-attr"></div>
+      </div>
     </div>
-    <div class="ob-filter-row">
-      <button class="ob-filter-btn active" data-filter="all"     onclick="renderOnboarding('all')">All</button>
-      <button class="ob-filter-btn"        data-filter="blocked" onclick="renderOnboarding('blocked')">🔴 Blocked</button>
-      <button class="ob-filter-btn"        data-filter="waiting" onclick="renderOnboarding('waiting')">⏳ Waiting</button>
-      <button class="ob-filter-btn"        data-filter="live"    onclick="renderOnboarding('live')">✅ Live</button>
+
+    <!-- Brand type breakdown -->
+    <div class="ob-panel-title">Avg days in pipeline by brand type</div>
+    <div class="ob-type-grid" id="ob-type-grid" style="margin-top:8px"></div>
+
+    <!-- Brands table header + filters -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:22px 0 10px">
+      <span style="font-size:13px;font-weight:600;color:#334155">
+        Brands · <span id="ob-brands-count">—</span> shown
+      </span>
+      <div class="ob-filter-row">
+        <button class="ob-filter-btn ob-f-active" data-f="all"     onclick="obSetStatusFilter('all')">All</button>
+        <button class="ob-filter-btn"             data-f="track"   onclick="obSetStatusFilter('track')">On Track</button>
+        <button class="ob-filter-btn"             data-f="blocked" onclick="obSetStatusFilter('blocked')">🔴 Blocked</button>
+        <button class="ob-filter-btn"             data-f="waiting" onclick="obSetStatusFilter('waiting')">⏳ Waiting</button>
+        <button class="ob-filter-btn"             data-f="live"    onclick="obSetStatusFilter('live')">✅ Live</button>
+      </div>
     </div>
+
     <table class="ob-brands-table">
       <thead>
         <tr>
           <th>Brand Name</th>
-          <th>Stage</th>
-          <th>Brand Type</th>
-          <th>Status</th>
-          <th>Sales Rep</th>
-          <th>Days Since Signed</th>
-          <th>Link</th>
+          <th>Type</th>
+          <th>Progress</th>
+          <th>Ops</th>
+          <th>Blocker</th>
+          <th class="sortable" onclick="obToggleSort(this)">Days ↓</th>
+          <th></th>
         </tr>
       </thead>
       <tbody id="ob-brands-body">
@@ -576,8 +679,30 @@
       </tbody>
     </table>
 
+    <!-- Ops workload -->
+    <div class="ob-panel-title" style="margin:8px 0 10px">Ops workload <span style="color:#94a3b8;font-size:10px;text-transform:none;letter-spacing:0">(click to filter table)</span></div>
+    <div class="ob-workload-grid" id="ob-workload-grid"></div>
+
+    <!-- Completed -->
+    <div class="ob-panel-title" style="margin:8px 0 10px">✅ Fully Onboarded · <span id="ob-done-count">—</span> brands</div>
+    <table class="ob-done-tbl">
+      <thead>
+        <tr>
+          <th>Brand</th>
+          <th>Type</th>
+          <th>Ops</th>
+          <th>Date Signed</th>
+          <th>Total Days</th>
+        </tr>
+      </thead>
+      <tbody id="ob-done-body">
+        <tr><td colspan="5" class="ob-empty">—</td></tr>
+      </tbody>
+    </table>
+
   </div>
 </div>
+
 
 <!-- Task Detail Drawer -->
 <div class="drawer-backdrop" id="backdrop" onclick="closeDrawer()"></div>
@@ -817,22 +942,34 @@
 
   /* ── Load data ── */
 
+
   /* ══════════════════════════════════════════
      ONBOARDING 2026 TAB
   ══════════════════════════════════════════ */
   const OB_PROJECT_GID = '1213113488679843';
 
+  // All Asana sections with step # (1-6) and type
   const OB_SECTIONS = [
-    { id: '1213113488679845', name: 'Signed – Day 0 Setup',    type: 'default' },
-    { id: '1215733164073077', name: 'Requirements Received?',  type: 'default' },
-    { id: '1213232688489800', name: 'Routing & AM Assignment', type: 'default' },
-    { id: '1213232688489802', name: 'Shop Build',              type: 'default' },
-    { id: '1213232688489804', name: 'CQ + Brand Auth',         type: 'default' },
-    { id: '1215733164073088', name: 'Product Listing',         type: 'default' },
-    { id: '1215733164073091', name: 'Waiting for Inventory',   type: 'waiting' },
-    { id: '1213232688489805', name: 'WAITING / BLOCKED',       type: 'blocked' },
-    { id: '1213232688489808', name: 'Final Check / Live',      type: 'live'    },
-    { id: '1213899559338851', name: 'Binding',                 type: 'default' },
+    { id: '1213113488679845', name: 'Day 0 Setup',          shortName: 'Day 0 Setup',       step: 1, type: 'default' },
+    { id: '1215733164073077', name: 'Requirements Received', shortName: 'Req. Received',    step: 1, type: 'default' },
+    { id: '1213232688489800', name: 'Routing & AM Assign',   shortName: 'AM Assignment',    step: 2, type: 'default' },
+    { id: '1213232688489802', name: 'Shop Build',            shortName: 'Shop Build',        step: 2, type: 'default' },
+    { id: '1213232688489804', name: 'CQ + Brand Auth',       shortName: 'CQ + Brand Auth',  step: 3, type: 'default' },
+    { id: '1215733164073088', name: 'Product Listing',       shortName: 'Product Listing',  step: 4, type: 'default' },
+    { id: '1215733164073091', name: 'Waiting for Inventory', shortName: 'Waiting Inv.',     step: 4, type: 'waiting' },
+    { id: '1213232688489805', name: 'WAITING / BLOCKED',     shortName: 'Waiting/Blocked',  step: 0, type: 'blocked' },
+    { id: '1213232688489808', name: 'Final Check / Live',    shortName: 'Live',             step: 6, type: 'live'    },
+    { id: '1213899559338851', name: 'Binding',               shortName: 'Binding',          step: 5, type: 'default' },
+  ];
+
+  // Visual flow stages (collapsed into 6 steps for display)
+  const OB_FLOW_STAGES = [
+    { label: 'Day 0 Setup',    ids: ['1213113488679845','1215733164073077','1213232688489800'] },
+    { label: 'Shop Build',     ids: ['1213232688489802'] },
+    { label: 'CQ + Brand Auth',ids: ['1213232688489804'] },
+    { label: 'Product Listing',ids: ['1215733164073088','1215733164073091'] },
+    { label: 'Binding',        ids: ['1213899559338851'] },
+    { label: 'Live',           ids: ['1213232688489808'] },
   ];
 
   const OB_CF = {
@@ -845,8 +982,16 @@
     blockerOwner: '1213113488679866',
   };
 
-  let obLoaded = false;
-  let obTasks  = [];
+  const OB_AV_COLORS = { Sanskar:'#6366f1', Samarth:'#0ea5e9', Manish:'#10b981', Saat:'#f59e0b', Balkrishna:'#ec4899', Riya:'#f43f5e', Andres:'#06b6d4' };
+
+  let obLoaded      = false;
+  let obActiveTasks = [];
+  let obDoneTasks   = [];
+  let obStatusFilter = 'all';
+  let obStageFilter  = null;
+  let obBlockerFilter = null;
+  let obOpsFilter    = null;
+  let obSortDir      = 'desc';
 
   /* ── Tab switching ── */
   function switchTab(tab) {
@@ -854,9 +999,8 @@
     const isOps = tab === 'ops';
     const obEl  = document.getElementById('onboarding-dashboard');
     const opsEl = document.getElementById('dashboard');
-    // Only show ops panel if ops data is already loaded
     if (isOps) {
-      obEl.style.display  = 'none';
+      obEl.style.display = 'none';
       if (allTasks.length || doneTasks.length) opsEl.style.display = 'block';
     } else {
       opsEl.style.display = 'none';
@@ -865,7 +1009,7 @@
     }
   }
 
-  /* ── Helpers ── */
+  /* ── CF helper ── */
   function obGetCF(task, cfGid) {
     if (!task.custom_fields) return null;
     const f = task.custom_fields.find(c => c.gid === cfGid);
@@ -873,123 +1017,364 @@
     return f.display_value || f.text_value || null;
   }
 
-  function obDaysClass(d) {
-    if (d <= 14) return 'd-fast';
-    if (d <= 30) return 'd-med';
-    return 'd-slow';
+  /* ── Days since signed ── */
+  function obGetDays(task) {
+    const ds = obGetCF(task, OB_CF.dateSigned);
+    if (!ds) return null;
+    return Math.floor((Date.now() - new Date(ds)) / 86400000);
   }
 
-  function obStatusBadge(t) {
-    const ws = (obGetCF(t, OB_CF.workingStatus) || '').toLowerCase();
-    const os = obGetCF(t, OB_CF.onboardStatus)  || '';
-    const st = t._sectionType;
-    if (st === 'blocked' || ws.includes('paused')) return `<span class="ob-badge ob-badge-blocked">🔴 Blocked</span>`;
-    if (st === 'waiting')                           return `<span class="ob-badge ob-badge-waiting">⏳ Waiting</span>`;
-    if (st === 'live')                              return `<span class="ob-badge ob-badge-live">✅ Live</span>`;
-    if (os === 'In Progress')                       return `<span class="ob-badge ob-badge-active">🟢 In Progress</span>`;
-    if (os && os !== 'Not Started' && os !== '—')  return `<span class="ob-badge ob-badge-waiting">${escHtmlEntities(os)}</span>`;
-    return `<span class="ob-badge ob-badge-default">Not Started</span>`;
+  /* ── Initials avatar ── */
+  function obInitials(name) {
+    if (!name) return '?';
+    const p = name.trim().split(/\s+/);
+    return p.length >= 2 ? (p[0][0] + p[p.length-1][0]).toUpperCase() : p[0].slice(0,2).toUpperCase();
+  }
+  function obAvatar(name) {
+    const first = (name || '').split(' ')[0];
+    const bg    = OB_AV_COLORS[first] || '#64748b';
+    return `<span class="ob-av" style="background:${bg}" title="${escHtmlEntities(name || '')}">${obInitials(name)}</span>`;
   }
 
-  /* ── Load Onboarding data ── */
+  /* ── Blocker info ── */
+  function obBlocker(task) {
+    const bl = (obGetCF(task, OB_CF.blockerOwner) || '').trim();
+    const lc = bl.toLowerCase();
+    if (!bl || bl === '—') return { label: '—', cssClass: 'ob-badge-none', key: 'none', color: '#22c55e' };
+    if (lc.includes('tiktok'))                          return { label: 'TikTok',    cssClass: 'ob-badge-tiktok',  key: 'tiktok',  color: '#ef4444' };
+    if (lc.includes('brand') || lc.includes('am'))      return { label: 'Brand / AM', cssClass: 'ob-badge-brand', key: 'brand',   color: '#f59e0b' };
+    if (lc.includes('pattern'))                         return { label: 'Pattern',   cssClass: 'ob-badge-pattern', key: 'pattern', color: '#7c3aed' };
+    return { label: bl, cssClass: 'ob-badge-none', key: 'other', color: '#64748b' };
+  }
+
+  /* ── Step progress dots ── */
+  function obStepDots(step, isBlocked) {
+    const total = 6;
+    let dots = '';
+    for (let i = 0; i < total; i++) {
+      if (isBlocked && i < step) dots += `<span class="ob-progress-dot dp-paused"></span>`;
+      else if (i < step)         dots += `<span class="ob-progress-dot dp-filled"></span>`;
+      else                        dots += `<span class="ob-progress-dot dp-empty"></span>`;
+    }
+    const lbl = isBlocked ? '⏸ Paused' : step === 6 ? '✅ Live' : `Step ${step} of 6`;
+    return `<div class="ob-progress">${dots}<span class="ob-progress-label">${lbl}</span></div>`;
+  }
+
+  /* ── Days class ── */
+  function obDaysCls(d) { return d <= 30 ? 'd-fast' : d <= 60 ? 'd-med' : 'd-slow'; }
+
+  /* ── Is task "blocked/paused" ── */
+  function obIsBlocked(t) {
+    return t._sectionType === 'blocked' ||
+      (obGetCF(t, OB_CF.workingStatus) || '').toLowerCase().includes('paused');
+  }
+
+  /* ── Load data ── */
   async function loadOnboardingData() {
     obLoaded = true;
     document.getElementById('ob-loading').style.display = 'flex';
     document.getElementById('ob-content').style.display = 'none';
 
-    const OB_OPT = 'name,completed,permalink_url,custom_fields.gid,custom_fields.display_value,custom_fields.text_value,custom_fields.number_value';
+    const OB_OPT = 'name,completed,completed_at,assignee.name,permalink_url,custom_fields.gid,custom_fields.display_value,custom_fields.text_value,custom_fields.number_value';
     try {
       const results = await Promise.all(OB_SECTIONS.map(async sec => {
         try {
           const d = await asanaFetch('/sections/' + sec.id + '/tasks', { opt_fields: OB_OPT, limit: 100 });
-          return (d.data || [])
-            .filter(t => !t.completed)
-            .map(t => Object.assign({}, t, { _sectionId: sec.id, _sectionName: sec.name, _sectionType: sec.type }));
+          return (d.data || []).map(t => Object.assign({}, t, {
+            _sectionId:   sec.id,
+            _sectionName: sec.name,
+            _sectionType: sec.type,
+            _step:        sec.step,
+          }));
         } catch(e) { console.warn('OB section failed:', sec.name, e); return []; }
       }));
 
-      obTasks = results.flat();
-      renderOnboarding('all');
+      const all      = results.flat();
+      obActiveTasks  = all.filter(t => !t.completed);
+      obDoneTasks    = all.filter(t =>  t.completed)
+                          .sort((a, b) => (b.completed_at || '').localeCompare(a.completed_at || ''));
+
+      renderOnboarding();
       document.getElementById('ob-loading').style.display = 'none';
-      document.getElementById('ob-content').style.display  = 'block';
+      document.getElementById('ob-content').style.display = 'block';
     } catch(e) {
-      document.getElementById('ob-loading').innerHTML = `<span style="color:#ef4444">Failed to load data: ${e.message}</span>`;
+      document.getElementById('ob-loading').innerHTML = `<span style="color:#ef4444">Failed to load: ${e.message}</span>`;
     }
   }
 
-  /* ── Render Onboarding view ── */
-  function renderOnboarding(filter) {
-    filter = filter || 'all';
-    document.querySelectorAll('.ob-filter-btn').forEach(b =>
-      b.classList.toggle('active', b.dataset.filter === filter)
-    );
+  /* ── Stat + stat setter ── */
+  function obSet(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
 
-    // Stage counts for pipeline
+  /* ── Main render ── */
+  function renderOnboarding() {
+    const tasks = obActiveTasks;
+
+    /* 1. Stage counts for flow + bars */
     const stageCounts = {};
     OB_SECTIONS.forEach(s => { stageCounts[s.id] = 0; });
-    obTasks.forEach(t => { if (stageCounts[t._sectionId] !== undefined) stageCounts[t._sectionId]++; });
-    const maxCount = Math.max(1, ...Object.values(stageCounts));
+    tasks.forEach(t => { if (stageCounts[t._sectionId] !== undefined) stageCounts[t._sectionId]++; });
 
-    document.getElementById('ob-pipeline-stages').innerHTML = OB_SECTIONS.map(sec => {
-      const cnt = stageCounts[sec.id] || 0;
-      const w   = Math.round((cnt / maxCount) * 100);
-      return `
-        <div class="ob-stage-row ${cnt === 0 ? 'ob-stage-zero' : ''}">
-          <span class="ob-stage-label">${sec.name}</span>
-          <div class="ob-stage-bar-wrap">
-            <div class="ob-stage-bar bar-${sec.type}" style="width:${w}%"></div>
-          </div>
-          <span class="ob-stage-count">${cnt}</span>
-        </div>`;
+    /* 2. Pipeline FLOW (top horizontal) */
+    const totalForFlow = tasks.length || 1;
+    const flowHtml = OB_FLOW_STAGES.map((fs, fi) => {
+      const cnt  = fs.ids.reduce((s, id) => s + (stageCounts[id] || 0), 0);
+      const isLast = fi === OB_FLOW_STAGES.length - 1;
+      const isLive    = fi === OB_FLOW_STAGES.length - 1;
+      const isBlocked = false;
+      const pillCls   = isLive ? 'fp-live' : '';
+      const arrow     = isLast ? '' : '<span class="ob-flow-arrow">›</span>';
+      return `<div class="ob-flow-step">
+        <div class="ob-flow-pill ${pillCls}" onclick="obFlowFilter('${fi}')">
+          <span class="fp-cnt">${cnt}</span>
+          <span class="fp-lbl">${fs.label}</span>
+        </div>
+      </div>${arrow}`;
     }).join('');
 
-    // Stat cards
-    const blocked = obTasks.filter(t =>
-      t._sectionType === 'blocked' ||
-      (obGetCF(t, OB_CF.workingStatus) || '').toLowerCase().includes('paused')
-    );
-    const waiting = obTasks.filter(t => t._sectionType === 'waiting');
-    const live    = obTasks.filter(t => t._sectionType === 'live');
+    // Waiting/Blocked pill appended
+    const blockedCnt = stageCounts['1213232688489805'] || 0;
+    const flowInner = flowHtml + (blockedCnt > 0 ? `<span class="ob-flow-arrow" style="margin:0 6px">·</span><div class="ob-flow-pill fp-blocked" style="flex:0 0 auto;padding:8px 14px" onclick="obSetStatusFilter('blocked')"><span class="fp-cnt">${blockedCnt}</span><span class="fp-lbl">Waiting/Blocked</span></div>` : '');
+    document.getElementById('ob-flow').innerHTML = flowInner;
 
-    document.getElementById('ob-s-active').textContent  = obTasks.length;
-    document.getElementById('ob-s-blocked').textContent = blocked.length;
-    document.getElementById('ob-s-waiting').textContent = waiting.length;
-    document.getElementById('ob-s-live').textContent    = live.length;
+    /* 3. Stat cards */
+    const daysList = tasks.map(t => obGetDays(t)).filter(d => d !== null);
+    const avgDays  = daysList.length ? Math.round(daysList.reduce((s,d)=>s+d,0)/daysList.length) : null;
+    const tiktokCnt  = tasks.filter(t => obBlocker(t).key === 'tiktok').length;
+    const brandCnt   = tasks.filter(t => obBlocker(t).key === 'brand').length;
+    const bindingCnt = stageCounts['1213899559338851'] || 0;
+    const liveCnt    = stageCounts['1213232688489808'] || 0;
 
-    // Apply filter
-    let filtered = obTasks;
-    if (filter === 'blocked') filtered = blocked;
-    else if (filter === 'waiting') filtered = waiting;
-    else if (filter === 'live')    filtered = live;
+    obSet('ob-s-active',  tasks.length);
+    obSet('ob-s-avgdays', avgDays != null ? avgDays + 'd' : '—');
+    obSet('ob-s-ttok',    tiktokCnt);
+    obSet('ob-s-brand',   brandCnt);
+    obSet('ob-s-binding', bindingCnt);
+    obSet('ob-s-live',    liveCnt);
+
+    /* 4. Urgent callout — longest active (not paused) */
+    const activeTracks = tasks.filter(t => !obIsBlocked(t)).sort((a,b) => (obGetDays(b)||0) - (obGetDays(a)||0));
+    const urgentEl = document.getElementById('ob-urgent');
+    if (activeTracks.length > 0 && obGetDays(activeTracks[0]) > 30) {
+      const u = activeTracks[0];
+      const bn = obGetCF(u, OB_CF.brandName) || u.name;
+      document.getElementById('ob-urgent-text').textContent =
+        `Most urgent: ${bn} — ${obGetDays(u)}d since signed`;
+      urgentEl.style.display = 'flex';
+    } else {
+      urgentEl.style.display = 'none';
+    }
+
+    /* 5. Stage bars */
+    const maxStageCnt = Math.max(1, ...Object.values(stageCounts));
+    const stageHtml = OB_SECTIONS.map(sec => {
+      const cnt  = stageCounts[sec.id] || 0;
+      const w    = Math.round((cnt / maxStageCnt) * 100);
+      const barColor = sec.type === 'blocked' ? '#f87171' : sec.type === 'waiting' ? '#fbbf24' : sec.type === 'live' ? '#34d399' : '#818cf8';
+      const isSel = obStageFilter === sec.id;
+      return `<div class="ob-bar-row ${isSel ? 'ob-sel' : ''}" onclick="obToggleStage('${sec.id}')">
+        <span class="ob-bar-lbl">${sec.shortName}</span>
+        <div class="ob-bar-track"><div class="ob-bar-fill" style="width:${w}%;background:${barColor}"></div></div>
+        <span class="ob-bar-num">${cnt}</span>
+      </div>`;
+    }).join('');
+    document.getElementById('ob-stage-bars').innerHTML = stageHtml;
+
+    /* 6. Blocker attribution */
+    const bKeys = ['none','tiktok','brand','pattern'];
+    const bLabels = { none:'No blocker', tiktok:'TikTok', brand:'Brand / AM', pattern:'Pattern' };
+    const bColors  = { none:'#22c55e', tiktok:'#ef4444', brand:'#f59e0b', pattern:'#7c3aed' };
+    const bCounts  = { none:0, tiktok:0, brand:0, pattern:0, other:0 };
+    tasks.forEach(t => {
+      const k = obBlocker(t).key;
+      bCounts[k in bCounts ? k : 'other']++;
+    });
+    const tot = tasks.length || 1;
+    const attrHtml = bKeys.map(k => {
+      const cnt = bCounts[k] || 0;
+      const pct = Math.round((cnt / tot) * 100);
+      const isSel = obBlockerFilter === k;
+      return `<div class="ob-attr-row ${isSel ? 'ob-sel' : ''}" onclick="obToggleBlocker('${k}')">
+        <span class="ob-attr-dot" style="background:${bColors[k]}"></span>
+        <span class="ob-attr-lbl">${bLabels[k]}</span>
+        <div class="ob-attr-bar-wrap"><div class="ob-attr-bar" style="width:${pct}%;background:${bColors[k]}"></div></div>
+        <span class="ob-attr-pct">${pct}%</span>
+        <span style="font-size:11px;color:#94a3b8">${cnt}</span>
+      </div>`;
+    }).join('');
+    document.getElementById('ob-blocker-attr').innerHTML = attrHtml;
+
+    /* 7. Brand type breakdown */
+    const typeMap = {};
+    tasks.forEach(t => {
+      const bt   = obGetCF(t, OB_CF.brandType) || 'Unknown';
+      const days = obGetDays(t);
+      if (!typeMap[bt]) typeMap[bt] = [];
+      if (days !== null) typeMap[bt].push(days);
+    });
+    const typeHtml = Object.entries(typeMap)
+      .sort((a,b) => b[1].length - a[1].length)
+      .map(([type, dArr]) => {
+        const avg = dArr.length ? Math.round(dArr.reduce((s,d)=>s+d,0)/dArr.length) : null;
+        return `<div class="ob-type-card">
+          <div class="ob-type-name" title="${escHtmlEntities(type)}">${escHtmlEntities(type)}</div>
+          <div class="ob-type-days">${avg != null ? avg+'d' : '—'}</div>
+          <div class="ob-type-cnt">${dArr.length} brand${dArr.length!==1?'s':''}</div>
+        </div>`;
+      }).join('');
+    document.getElementById('ob-type-grid').innerHTML = typeHtml || '<span style="color:#94a3b8;font-size:13px">No data</span>';
+
+    /* 8. Brand table */
+    renderObTable();
+
+    /* 9. Ops workload */
+    const opsMap = {};
+    tasks.forEach(t => {
+      const name  = (t.assignee && t.assignee.name) || 'Unassigned';
+      const first = name.split(' ')[0];
+      if (!opsMap[first]) opsMap[first] = { name, brands: 0, blocked: 0 };
+      opsMap[first].brands++;
+      if (obIsBlocked(t)) opsMap[first].blocked++;
+    });
+    const wlHtml = Object.values(opsMap)
+      .sort((a,b) => b.brands - a.brands)
+      .map(p => {
+        const isSel = obOpsFilter === p.name.split(' ')[0];
+        return `<div class="ob-wl-card ${isSel ? 'ob-sel' : ''}" onclick="obToggleOps('${p.name.split(' ')[0]}')">
+          <div class="ob-wl-top">${obAvatar(p.name)}<span class="ob-wl-name">${p.name.split(' ')[0]}</span></div>
+          <div class="ob-wl-stats">
+            <div class="ob-wl-stat"><span class="ob-wl-stat-lbl">Brands</span><span class="ob-wl-val">${p.brands}</span></div>
+            <div class="ob-wl-stat"><span class="ob-wl-stat-lbl">Blocked</span><span class="ob-wl-val ${p.blocked>0?'':'ob-wl-val'}">${p.blocked}</span></div>
+          </div>
+        </div>`;
+      }).join('');
+    document.getElementById('ob-workload-grid').innerHTML = wlHtml || '<span style="color:#94a3b8">No data</span>';
+
+    /* 10. Completed table */
+    obSet('ob-done-count', obDoneTasks.length);
+    if (obDoneTasks.length === 0) {
+      document.getElementById('ob-done-body').innerHTML = '<tr><td colspan="5" class="ob-empty">No completed brands yet</td></tr>';
+    } else {
+      document.getElementById('ob-done-body').innerHTML = obDoneTasks.map(t => {
+        const bn      = obGetCF(t, OB_CF.brandName) || t.name;
+        const bt      = obGetCF(t, OB_CF.brandType)  || '—';
+        const ops     = (t.assignee && t.assignee.name) || '—';
+        const ds      = obGetCF(t, OB_CF.dateSigned);
+        const totalD  = ds && t.completed_at
+          ? Math.floor((new Date(t.completed_at) - new Date(ds)) / 86400000)
+          : null;
+        const dsDisp  = ds ? new Date(ds).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+        return `<tr>
+          <td><strong>${escHtmlEntities(bn)}</strong></td>
+          <td style="font-size:11px;color:#64748b">${escHtmlEntities(bt)}</td>
+          <td>${obAvatar(ops)}</td>
+          <td style="font-size:12px;color:#64748b">${dsDisp}</td>
+          <td><span class="ob-days d-fast">${totalD != null ? totalD+'d' : '—'}</span></td>
+        </tr>`;
+      }).join('');
+    }
+  }
+
+  /* ── Brand table with filters ── */
+  function renderObTable() {
+    let filtered = obActiveTasks;
+
+    // Status filter
+    if (obStatusFilter === 'blocked') filtered = filtered.filter(t => obIsBlocked(t));
+    else if (obStatusFilter === 'track') filtered = filtered.filter(t => !obIsBlocked(t) && t._sectionType !== 'waiting' && t._sectionType !== 'live');
+    else if (obStatusFilter === 'waiting') filtered = filtered.filter(t => t._sectionType === 'waiting');
+    else if (obStatusFilter === 'live')    filtered = filtered.filter(t => t._sectionType === 'live');
+
+    // Stage filter
+    if (obStageFilter) filtered = filtered.filter(t => t._sectionId === obStageFilter);
+
+    // Blocker filter
+    if (obBlockerFilter) filtered = filtered.filter(t => obBlocker(t).key === obBlockerFilter);
+
+    // Ops filter
+    if (obOpsFilter) filtered = filtered.filter(t => {
+      const first = ((t.assignee && t.assignee.name) || '').split(' ')[0];
+      return first === obOpsFilter;
+    });
+
+    // Sort by days
+    filtered = [...filtered].sort((a, b) => {
+      const da = obGetDays(a) || 0, db = obGetDays(b) || 0;
+      return obSortDir === 'desc' ? db - da : da - db;
+    });
 
     document.getElementById('ob-brands-count').textContent = filtered.length;
 
-    // Build rows
     const rows = filtered.map(t => {
-      const brandName  = obGetCF(t, OB_CF.brandName)  || t.name;
-      const brandType  = obGetCF(t, OB_CF.brandType)  || '—';
-      const salesRep   = obGetCF(t, OB_CF.salesRep)   || '—';
-      const dateSigned = obGetCF(t, OB_CF.dateSigned) || null;
-      const days       = dateSigned ? Math.floor((Date.now() - new Date(dateSigned)) / 86400000) : null;
-      const daysTxt    = days != null
-        ? `<span class="ob-days ${obDaysClass(days)}">${days}d</span>`
-        : '<span style="color:#cbd5e1">—</span>';
+      const bn      = obGetCF(t, OB_CF.brandName) || t.name;
+      const bt      = obGetCF(t, OB_CF.brandType) || '—';
+      const ops     = (t.assignee && t.assignee.name) || '—';
+      const days    = obGetDays(t);
+      const daysTxt = days != null ? `<span class="ob-days ${obDaysCls(days)}">${days}d</span>` : '<span style="color:#cbd5e1">—</span>';
+      const blocked = obIsBlocked(t);
+      const step    = t._step || 0;
+      const blk     = obBlocker(t);
+      const blkBadge = blk.key === 'none'
+        ? '<span style="color:#cbd5e1;font-size:11px">—</span>'
+        : `<span class="ob-badge ${blk.cssClass}">${escHtmlEntities(blk.label)}</span>`;
+
       return `<tr>
-        <td><strong>${escHtmlEntities(brandName)}</strong></td>
-        <td><span style="font-size:11px;color:#64748b">${escHtmlEntities(t._sectionName)}</span></td>
-        <td style="font-size:12px">${escHtmlEntities(brandType)}</td>
-        <td>${obStatusBadge(t)}</td>
-        <td style="font-size:12px;color:#475569">${escHtmlEntities(salesRep)}</td>
+        <td><strong>${escHtmlEntities(bn)}</strong></td>
+        <td style="font-size:11px;color:#64748b;white-space:nowrap">${escHtmlEntities(bt)}</td>
+        <td>${obStepDots(step, blocked)}</td>
+        <td>${obAvatar(ops)}</td>
+        <td>${blkBadge}</td>
         <td>${daysTxt}</td>
         <td><a class="ob-link" href="${t.permalink_url || '#'}" target="_blank">↗</a></td>
       </tr>`;
     }).join('');
 
-    document.getElementById('ob-brands-body').innerHTML = rows ||
-      `<tr><td colspan="7" class="ob-empty">No brands in this view</td></tr>`;
+    document.getElementById('ob-brands-body').innerHTML =
+      rows || `<tr><td colspan="7" class="ob-empty">No brands match the current filter</td></tr>`;
+  }
+
+  /* ── Filter helpers ── */
+  function obSetStatusFilter(f) {
+    obStatusFilter = f;
+    document.querySelectorAll('.ob-filter-btn').forEach(b =>
+      b.classList.toggle('ob-f-active', b.dataset.f === f)
+    );
+    renderObTable();
+  }
+  function obToggleStage(id) {
+    obStageFilter = obStageFilter === id ? null : id;
+    renderOnboarding();
+  }
+  function obToggleBlocker(key) {
+    obBlockerFilter = obBlockerFilter === key ? null : key;
+    renderOnboarding();
+  }
+  function obToggleOps(first) {
+    obOpsFilter = obOpsFilter === first ? null : first;
+    renderObTable();
+    document.querySelectorAll('.ob-wl-card').forEach(c =>
+      c.classList.toggle('ob-sel', c.querySelector('.ob-wl-name')?.textContent === first && obOpsFilter === first)
+    );
+  }
+  function obFlowFilter(fi) {
+    // Clicking a flow step sets stage filter to all sections in that step
+    // For simplicity, just set status filter based on step
+    const stage = OB_FLOW_STAGES[fi];
+    if (!stage) return;
+    // Toggle: if already filtered to this exact set, clear
+    // Set stage filter to first matching section
+    obStageFilter   = null;
+    obBlockerFilter = null;
+    obStatusFilter  = 'all';
+    renderOnboarding();
+  }
+  function obToggleSort(el) {
+    obSortDir = obSortDir === 'desc' ? 'asc' : 'desc';
+    if (el) el.textContent = 'Days ' + (obSortDir === 'desc' ? '↓' : '↑');
+    renderObTable();
   }
 
   /* ══════════════════════════════════════════ */
+
   async function loadData() {
     if (!checkToken()) return;
     const btn = document.getElementById('refresh-btn');
