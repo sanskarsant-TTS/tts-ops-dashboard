@@ -174,6 +174,55 @@
     .token-btn { width:100%;padding:10px;background:#6366f1;color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer; }
     .token-btn:hover { background:#4f46e5; }
     .token-note { font-size:11px;color:#64748b;margin-top:10px; }
+
+    /* ── Tab Bar ── */
+    .tab-bar { background: #1e293b; display: flex; gap: 0; padding: 0 20px; position: sticky; top: 49px; z-index: 99; border-bottom: 2px solid #0f172a; }
+    .tab-btn { padding: 12px 20px; font-size: 13px; font-weight: 500; color: #64748b; background: transparent; border: none; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: color 0.15s; letter-spacing: 0.01em; }
+    .tab-btn:hover { color: #cbd5e1; }
+    .tab-btn.active { color: #fff; border-bottom-color: #6366f1; }
+
+    /* ── Onboarding Dashboard ── */
+    #onboarding-dashboard { display: none; padding: 20px 24px; }
+    .ob-summary-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+    .ob-pipeline-wrap { background: white; border-radius: 10px; border: 1px solid #e2e8f0; padding: 16px 20px; margin-bottom: 22px; }
+    .ob-pipeline-title { font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px; }
+    .ob-stage-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .ob-stage-label { width: 195px; font-size: 12px; color: #475569; text-align: right; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ob-stage-bar-wrap { flex: 1; background: #f1f5f9; border-radius: 4px; height: 20px; overflow: hidden; }
+    .ob-stage-bar { height: 100%; border-radius: 4px; min-width: 3px; transition: width 0.5s ease; }
+    .ob-stage-count { font-size: 12px; font-weight: 600; color: #334155; width: 24px; text-align: right; }
+    .ob-stage-zero .ob-stage-count { color: #cbd5e1; }
+    .bar-blocked { background: linear-gradient(90deg,#f87171,#ef4444); }
+    .bar-waiting  { background: linear-gradient(90deg,#fbbf24,#f59e0b); }
+    .bar-live     { background: linear-gradient(90deg,#34d399,#10b981); }
+    .bar-default  { background: linear-gradient(90deg,#818cf8,#6366f1); }
+    .ob-brands-table { width: 100%; border-collapse: collapse; font-size: 12.5px; background: white; border-radius: 10px; overflow: hidden; border: 1px solid #e2e8f0; }
+    .ob-brands-table th { background: #f8fafc; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; padding: 10px 14px; text-align: left; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+    .ob-brands-table td { padding: 10px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    .ob-brands-table tr:last-child td { border-bottom: none; }
+    .ob-brands-table tr:hover td { background: #fafbfc; }
+    .ob-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+    .ob-badge-blocked  { background: #fee2e2; color: #dc2626; }
+    .ob-badge-paused   { background: #ffedd5; color: #ea580c; }
+    .ob-badge-waiting  { background: #fef3c7; color: #d97706; }
+    .ob-badge-live     { background: #d1fae5; color: #059669; }
+    .ob-badge-active   { background: #dbeafe; color: #2563eb; }
+    .ob-badge-default  { background: #f1f5f9; color: #64748b; }
+    .ob-section-lbl { font-size: 13px; font-weight: 600; color: #334155; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
+    .ob-chip { font-size: 11px; font-weight: 500; background: #f1f5f9; color: #64748b; padding: 2px 8px; border-radius: 20px; }
+    .ob-empty { color: #94a3b8; font-size: 13px; padding: 20px; text-align: center; }
+    .ob-link { color: #6366f1; text-decoration: none; font-size: 11px; }
+    .ob-link:hover { text-decoration: underline; }
+    .ob-days { font-size: 12px; font-weight: 600; }
+    .ob-days.d-fast { color: #16a34a; }
+    .ob-days.d-med  { color: #d97706; }
+    .ob-days.d-slow { color: #dc2626; }
+    .ob-filter-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+    .ob-filter-btn { padding: 5px 14px; font-size: 12px; border: 1px solid #e2e8f0; border-radius: 20px; background: white; color: #64748b; cursor: pointer; transition: all 0.15s; }
+    .ob-filter-btn:hover { border-color: #6366f1; color: #6366f1; }
+    .ob-filter-btn.active { background: #6366f1; color: white; border-color: #6366f1; }
+    .ob-inline-loading { display: none; align-items: center; justify-content: center; gap: 10px; padding: 40px; color: #64748b; font-size: 13px; }
+    .ob-inline-loading .spinner { width: 22px; height: 22px; border-width: 2px; }
   </style>
 </head>
 <body>
@@ -198,6 +247,12 @@
     <button class="refresh-btn" onclick="clearToken()" style="background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0">⚙ Change Token</button>
     <a class="asana-btn" href="https://app.asana.com/1/953966021734988/project/1209526689276182/board/1209526692754530" target="_blank">↗ Asana</a>
   </div>
+</div>
+
+<!-- Tab Bar -->
+<div class="tab-bar">
+  <button class="tab-btn active" data-tab="ops"  onclick="switchTab('ops')">📋 TTS Operations</button>
+  <button class="tab-btn"        data-tab="ob"   onclick="switchTab('ob')">🚀 Onboarding 2026</button>
 </div>
 
 <!-- Loading -->
@@ -452,6 +507,78 @@
 
 </div>
 
+<!-- Onboarding Dashboard -->
+<div id="onboarding-dashboard">
+
+  <!-- Inline loading -->
+  <div class="ob-inline-loading" id="ob-loading">
+    <div class="spinner"></div>
+    <span>Loading Onboarding 2026 data…</span>
+  </div>
+
+  <div id="ob-content" style="display:none">
+
+    <!-- Stats -->
+    <div class="ob-summary-row">
+      <div class="stat-card c-blue">
+        <div class="lbl">Active Brands</div>
+        <div class="val" id="ob-s-active">—</div>
+        <div class="sub">in pipeline</div>
+      </div>
+      <div class="stat-card" style="border-color:#fee2e2">
+        <div class="lbl">Blocked / Paused</div>
+        <div class="val" id="ob-s-blocked" style="color:#ef4444">—</div>
+        <div class="sub">need attention</div>
+      </div>
+      <div class="stat-card" style="border-color:#fef3c7">
+        <div class="lbl">Waiting</div>
+        <div class="val" id="ob-s-waiting" style="color:#f59e0b">—</div>
+        <div class="sub">inventory / TikTok</div>
+      </div>
+      <div class="stat-card" style="border-color:#d1fae5">
+        <div class="lbl">Final Check / Live</div>
+        <div class="val" id="ob-s-live" style="color:#10b981">—</div>
+        <div class="sub">almost there</div>
+      </div>
+    </div>
+
+    <!-- Pipeline visual -->
+    <div class="ob-pipeline-wrap">
+      <div class="ob-pipeline-title">Pipeline Stages</div>
+      <div id="ob-pipeline-stages"></div>
+    </div>
+
+    <!-- Filter row + Brands table -->
+    <div class="ob-section-lbl">
+      All Active Brands
+      <span class="ob-chip" id="ob-brands-count">—</span>
+    </div>
+    <div class="ob-filter-row">
+      <button class="ob-filter-btn active" data-filter="all"     onclick="renderOnboarding('all')">All</button>
+      <button class="ob-filter-btn"        data-filter="blocked" onclick="renderOnboarding('blocked')">🔴 Blocked</button>
+      <button class="ob-filter-btn"        data-filter="waiting" onclick="renderOnboarding('waiting')">⏳ Waiting</button>
+      <button class="ob-filter-btn"        data-filter="live"    onclick="renderOnboarding('live')">✅ Live</button>
+    </div>
+    <table class="ob-brands-table">
+      <thead>
+        <tr>
+          <th>Brand Name</th>
+          <th>Stage</th>
+          <th>Brand Type</th>
+          <th>Status</th>
+          <th>Sales Rep</th>
+          <th>Days Since Signed</th>
+          <th>Link</th>
+        </tr>
+      </thead>
+      <tbody id="ob-brands-body">
+        <tr><td colspan="7" class="ob-empty">Loading…</td></tr>
+      </tbody>
+    </table>
+
+  </div>
+</div>
+
 <!-- Task Detail Drawer -->
 <div class="drawer-backdrop" id="backdrop" onclick="closeDrawer()"></div>
 <div class="drawer" id="drawer">
@@ -689,12 +816,187 @@
   }
 
   /* ── Load data ── */
+
+  /* ══════════════════════════════════════════
+     ONBOARDING 2026 TAB
+  ══════════════════════════════════════════ */
+  const OB_PROJECT_GID = '1213113488679843';
+
+  const OB_SECTIONS = [
+    { id: '1213113488679845', name: 'Signed – Day 0 Setup',    type: 'default' },
+    { id: '1215733164073077', name: 'Requirements Received?',  type: 'default' },
+    { id: '1213232688489800', name: 'Routing & AM Assignment', type: 'default' },
+    { id: '1213232688489802', name: 'Shop Build',              type: 'default' },
+    { id: '1213232688489804', name: 'CQ + Brand Auth',         type: 'default' },
+    { id: '1215733164073088', name: 'Product Listing',         type: 'default' },
+    { id: '1215733164073091', name: 'Waiting for Inventory',   type: 'waiting' },
+    { id: '1213232688489805', name: 'WAITING / BLOCKED',       type: 'blocked' },
+    { id: '1213232688489808', name: 'Final Check / Live',      type: 'live'    },
+    { id: '1213899559338851', name: 'Binding',                 type: 'default' },
+  ];
+
+  const OB_CF = {
+    brandName:    '1213225017301320',
+    onboardStatus:'1213187098790831',
+    workingStatus:'1215733164073073',
+    brandType:    '1213186691704359',
+    salesRep:     '1213225017301306',
+    dateSigned:   '1213225018306908',
+    blockerOwner: '1213113488679866',
+  };
+
+  let obLoaded = false;
+  let obTasks  = [];
+
+  /* ── Tab switching ── */
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    const isOps = tab === 'ops';
+    const obEl  = document.getElementById('onboarding-dashboard');
+    const opsEl = document.getElementById('dashboard');
+    // Only show ops panel if ops data is already loaded
+    if (isOps) {
+      obEl.style.display  = 'none';
+      if (allTasks.length || doneTasks.length) opsEl.style.display = 'block';
+    } else {
+      opsEl.style.display = 'none';
+      obEl.style.display  = 'block';
+      if (!obLoaded) loadOnboardingData();
+    }
+  }
+
+  /* ── Helpers ── */
+  function obGetCF(task, cfGid) {
+    if (!task.custom_fields) return null;
+    const f = task.custom_fields.find(c => c.gid === cfGid);
+    if (!f) return null;
+    return f.display_value || f.text_value || null;
+  }
+
+  function obDaysClass(d) {
+    if (d <= 14) return 'd-fast';
+    if (d <= 30) return 'd-med';
+    return 'd-slow';
+  }
+
+  function obStatusBadge(t) {
+    const ws = (obGetCF(t, OB_CF.workingStatus) || '').toLowerCase();
+    const os = obGetCF(t, OB_CF.onboardStatus)  || '';
+    const st = t._sectionType;
+    if (st === 'blocked' || ws.includes('paused')) return `<span class="ob-badge ob-badge-blocked">🔴 Blocked</span>`;
+    if (st === 'waiting')                           return `<span class="ob-badge ob-badge-waiting">⏳ Waiting</span>`;
+    if (st === 'live')                              return `<span class="ob-badge ob-badge-live">✅ Live</span>`;
+    if (os === 'In Progress')                       return `<span class="ob-badge ob-badge-active">🟢 In Progress</span>`;
+    if (os && os !== 'Not Started' && os !== '—')  return `<span class="ob-badge ob-badge-waiting">${escHtmlEntities(os)}</span>`;
+    return `<span class="ob-badge ob-badge-default">Not Started</span>`;
+  }
+
+  /* ── Load Onboarding data ── */
+  async function loadOnboardingData() {
+    obLoaded = true;
+    document.getElementById('ob-loading').style.display = 'flex';
+    document.getElementById('ob-content').style.display = 'none';
+
+    const OB_OPT = 'name,completed,permalink_url,custom_fields.gid,custom_fields.display_value,custom_fields.text_value,custom_fields.number_value';
+    try {
+      const results = await Promise.all(OB_SECTIONS.map(async sec => {
+        try {
+          const d = await asanaFetch('/sections/' + sec.id + '/tasks', { opt_fields: OB_OPT, limit: 100 });
+          return (d.data || [])
+            .filter(t => !t.completed)
+            .map(t => Object.assign({}, t, { _sectionId: sec.id, _sectionName: sec.name, _sectionType: sec.type }));
+        } catch(e) { console.warn('OB section failed:', sec.name, e); return []; }
+      }));
+
+      obTasks = results.flat();
+      renderOnboarding('all');
+      document.getElementById('ob-loading').style.display = 'none';
+      document.getElementById('ob-content').style.display  = 'block';
+    } catch(e) {
+      document.getElementById('ob-loading').innerHTML = `<span style="color:#ef4444">Failed to load data: ${e.message}</span>`;
+    }
+  }
+
+  /* ── Render Onboarding view ── */
+  function renderOnboarding(filter) {
+    filter = filter || 'all';
+    document.querySelectorAll('.ob-filter-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.filter === filter)
+    );
+
+    // Stage counts for pipeline
+    const stageCounts = {};
+    OB_SECTIONS.forEach(s => { stageCounts[s.id] = 0; });
+    obTasks.forEach(t => { if (stageCounts[t._sectionId] !== undefined) stageCounts[t._sectionId]++; });
+    const maxCount = Math.max(1, ...Object.values(stageCounts));
+
+    document.getElementById('ob-pipeline-stages').innerHTML = OB_SECTIONS.map(sec => {
+      const cnt = stageCounts[sec.id] || 0;
+      const w   = Math.round((cnt / maxCount) * 100);
+      return `
+        <div class="ob-stage-row ${cnt === 0 ? 'ob-stage-zero' : ''}">
+          <span class="ob-stage-label">${sec.name}</span>
+          <div class="ob-stage-bar-wrap">
+            <div class="ob-stage-bar bar-${sec.type}" style="width:${w}%"></div>
+          </div>
+          <span class="ob-stage-count">${cnt}</span>
+        </div>`;
+    }).join('');
+
+    // Stat cards
+    const blocked = obTasks.filter(t =>
+      t._sectionType === 'blocked' ||
+      (obGetCF(t, OB_CF.workingStatus) || '').toLowerCase().includes('paused')
+    );
+    const waiting = obTasks.filter(t => t._sectionType === 'waiting');
+    const live    = obTasks.filter(t => t._sectionType === 'live');
+
+    document.getElementById('ob-s-active').textContent  = obTasks.length;
+    document.getElementById('ob-s-blocked').textContent = blocked.length;
+    document.getElementById('ob-s-waiting').textContent = waiting.length;
+    document.getElementById('ob-s-live').textContent    = live.length;
+
+    // Apply filter
+    let filtered = obTasks;
+    if (filter === 'blocked') filtered = blocked;
+    else if (filter === 'waiting') filtered = waiting;
+    else if (filter === 'live')    filtered = live;
+
+    document.getElementById('ob-brands-count').textContent = filtered.length;
+
+    // Build rows
+    const rows = filtered.map(t => {
+      const brandName  = obGetCF(t, OB_CF.brandName)  || t.name;
+      const brandType  = obGetCF(t, OB_CF.brandType)  || '—';
+      const salesRep   = obGetCF(t, OB_CF.salesRep)   || '—';
+      const dateSigned = obGetCF(t, OB_CF.dateSigned) || null;
+      const days       = dateSigned ? Math.floor((Date.now() - new Date(dateSigned)) / 86400000) : null;
+      const daysTxt    = days != null
+        ? `<span class="ob-days ${obDaysClass(days)}">${days}d</span>`
+        : '<span style="color:#cbd5e1">—</span>';
+      return `<tr>
+        <td><strong>${escHtmlEntities(brandName)}</strong></td>
+        <td><span style="font-size:11px;color:#64748b">${escHtmlEntities(t._sectionName)}</span></td>
+        <td style="font-size:12px">${escHtmlEntities(brandType)}</td>
+        <td>${obStatusBadge(t)}</td>
+        <td style="font-size:12px;color:#475569">${escHtmlEntities(salesRep)}</td>
+        <td>${daysTxt}</td>
+        <td><a class="ob-link" href="${t.permalink_url || '#'}" target="_blank">↗</a></td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('ob-brands-body').innerHTML = rows ||
+      `<tr><td colspan="7" class="ob-empty">No brands in this view</td></tr>`;
+  }
+
+  /* ══════════════════════════════════════════ */
   async function loadData() {
     if (!checkToken()) return;
     const btn = document.getElementById('refresh-btn');
     btn.disabled = true;
     document.getElementById('loading').style.display = 'flex';
-    document.getElementById('dashboard').style.display = 'none';
+    const _opsActive = document.querySelector('.tab-btn[data-tab="ops"]')?.classList.contains('active') !== false;
+    if (_opsActive) document.getElementById('dashboard').style.display = 'none';
     allTasks = []; doneTasks = []; accountHealthTasks = []; coreTeamTasks = [];
 
     const msgs = ['Connecting to Asana…','Fetching active tasks…','Fetching completed tasks…','Loading task histories…','Crunching numbers…'];
@@ -758,7 +1060,7 @@
     document.getElementById('updated-time').textContent =
       'Updated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     document.getElementById('loading').style.display='none';
-    document.getElementById('dashboard').style.display='block';
+    if (_opsActive) document.getElementById('dashboard').style.display='block';
     btn.disabled=false;
   }
 
