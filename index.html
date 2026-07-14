@@ -1074,11 +1074,14 @@
   /* ── Load data ── */
   async function loadOnboardingData() {
     obLoaded = true;
+    const loadingSpan = document.querySelector('#ob-loading span');
     document.getElementById('ob-loading').style.display = 'flex';
     document.getElementById('ob-content').style.display = 'none';
 
     const OB_OPT = 'name,completed,completed_at,created_at,assignee.name,permalink_url,custom_fields.gid,custom_fields.display_value,custom_fields.text_value,custom_fields.number_value';
     try {
+      // Step 1: Fetch tasks from all sections
+      if (loadingSpan) loadingSpan.textContent = 'Loading brands…';
       const results = await Promise.all(OB_SECTIONS.map(async sec => {
         try {
           const d = await asanaFetch('/sections/' + sec.id + '/tasks', { opt_fields: OB_OPT, limit: 100 });
@@ -1091,10 +1094,32 @@
         } catch(e) { console.warn('OB section failed:', sec.name, e); return []; }
       }));
 
-      const all      = results.flat();
-      obActiveTasks  = all.filter(t => !t.completed);
-      obDoneTasks    = all.filter(t =>  t.completed)
-                          .sort((a, b) => (b.completed_at || '').localeCompare(a.completed_at || ''));
+      const all     = results.flat();
+      obActiveTasks = all.filter(t => !t.completed);
+      obDoneTasks   = all.filter(t =>  t.completed)
+                         .sort((a, b) => (b.completed_at || '').localeCompare(a.completed_at || ''));
+
+      // Step 2: For each brand past Day 0 Setup, fetch task stories to find the exact
+      //         date it entered "Requirements Received?" — that's the true onboarding start.
+      const needStories = [
+        ...obActiveTasks.filter(t => t._step > 1),
+        ...obDoneTasks,
+      ];
+      if (loadingSpan) loadingSpan.textContent = `Fetching requirement dates (${needStories.length} brands)…`;
+
+      await Promise.all(needStories.map(async t => {
+        try {
+          const s = await asanaFetch('/tasks/' + t.gid + '/stories', {
+            opt_fields: 'type,created_at,text', limit: 100
+          });
+          // Find first story where task was moved/added to "Requirements Received?"
+          const story = (s.data || []).find(st =>
+            st.type === 'system' &&
+            (st.text || '').toLowerCase().includes('requirements received')
+          );
+          t._reqDate = story ? story.created_at : null;
+        } catch(e) { t._reqDate = null; }
+      }));
 
       renderOnboarding();
       document.getElementById('ob-loading').style.display = 'none';
@@ -1260,8 +1285,9 @@
         const bn      = obGetCF(t, OB_CF.brandName) || t.name;
         const bt      = obGetCF(t, OB_CF.brandType)  || '—';
         const ops     = (t.assignee && t.assignee.name) || '—';
-        const totalD  = t.created_at && t.completed_at
-          ? Math.floor((new Date(t.completed_at) - new Date(t.created_at)) / 86400000)
+        const reqStart = t._reqDate || t.created_at;
+        const totalD  = reqStart && t.completed_at
+          ? Math.floor((new Date(t.completed_at) - new Date(reqStart)) / 86400000)
           : null;
         const dsDisp  = ds ? new Date(ds).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
         return `<tr>
