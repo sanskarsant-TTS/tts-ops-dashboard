@@ -1107,19 +1107,25 @@
       ];
       if (loadingSpan) loadingSpan.textContent = `Fetching requirement dates (${needStories.length} brands)…`;
 
-      await Promise.all(needStories.map(async t => {
-        try {
-          const s = await asanaFetch('/tasks/' + t.gid + '/stories', {
-            opt_fields: 'type,created_at,text', limit: 100
-          });
-          // Find first story where task was moved/added to "Requirements Received?"
-          const story = (s.data || []).find(st =>
-            st.type === 'system' &&
-            (st.text || '').toLowerCase().includes('requirements received')
-          );
-          t._reqDate = story ? story.created_at : null;
-        } catch(e) { t._reqDate = null; }
-      }));
+      // Fetch stories in chunks of 8 to avoid saturating the browser connection pool
+      const CHUNK = 8;
+      for (let i = 0; i < needStories.length; i += CHUNK) {
+        await Promise.all(needStories.slice(i, i + CHUNK).map(async t => {
+          try {
+            const s = await asanaFetch('/tasks/' + t.gid + '/stories', {
+              opt_fields: 'type,created_at,text', limit: 100
+            });
+            // Find first story where task was moved/added to "Requirements Received?"
+            const story = (s.data || []).find(st =>
+              st.type === 'system' &&
+              (st.text || '').toLowerCase().includes('requirements received')
+            );
+            t._reqDate = story ? story.created_at : null;
+          } catch(e) { t._reqDate = null; }
+        }));
+        if (loadingSpan) loadingSpan.textContent =
+          `Fetching requirement dates… (${Math.min(i + CHUNK, needStories.length)}/${needStories.length})`;
+      }
 
       renderOnboarding();
       document.getElementById('ob-loading').style.display = 'none';
@@ -1285,6 +1291,7 @@
         const bn      = obGetCF(t, OB_CF.brandName) || t.name;
         const bt      = obGetCF(t, OB_CF.brandType)  || '—';
         const ops     = (t.assignee && t.assignee.name) || '—';
+        const ds      = obGetCF(t, OB_CF.dateSigned);
         const reqStart = t._reqDate || t.created_at;
         const totalD  = reqStart && t.completed_at
           ? Math.floor((new Date(t.completed_at) - new Date(reqStart)) / 86400000)
