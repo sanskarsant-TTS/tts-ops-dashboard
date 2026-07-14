@@ -603,7 +603,7 @@
       <div class="stat-card" style="border-color:#e2e8f0">
         <div class="lbl">Avg Days</div>
         <div class="val" id="ob-s-avgdays" style="color:#334155">—</div>
-        <div class="sub">since signed</div>
+        <div class="sub">req received → now</div>
       </div>
       <div class="stat-card" style="border-color:#fee2e2">
         <div class="lbl">Blocked by TikTok</div>
@@ -1019,9 +1019,11 @@
 
   /* ── Days since signed ── */
   function obGetDays(task) {
-    const ds = obGetCF(task, OB_CF.dateSigned);
-    if (!ds) return null;
-    return Math.floor((Date.now() - new Date(ds)) / 86400000);
+    // Only count from requirements received onwards (Day 0 Setup = not yet)
+    if (task._step === 1) return null;
+    const start = task.created_at;
+    if (!start) return null;
+    return Math.floor((Date.now() - new Date(start)) / 86400000);
   }
 
   /* ── Initials avatar ── */
@@ -1075,7 +1077,7 @@
     document.getElementById('ob-loading').style.display = 'flex';
     document.getElementById('ob-content').style.display = 'none';
 
-    const OB_OPT = 'name,completed,completed_at,assignee.name,permalink_url,custom_fields.gid,custom_fields.display_value,custom_fields.text_value,custom_fields.number_value';
+    const OB_OPT = 'name,completed,completed_at,created_at,assignee.name,permalink_url,custom_fields.gid,custom_fields.display_value,custom_fields.text_value,custom_fields.number_value';
     try {
       const results = await Promise.all(OB_SECTIONS.map(async sec => {
         try {
@@ -1158,7 +1160,7 @@
       const u = activeTracks[0];
       const bn = obGetCF(u, OB_CF.brandName) || u.name;
       document.getElementById('ob-urgent-text').textContent =
-        `Most urgent: ${bn} — ${obGetDays(u)}d since signed`;
+        `Most urgent: ${bn} — ${obGetDays(u)}d in active onboarding`;
       urgentEl.style.display = 'flex';
     } else {
       urgentEl.style.display = 'none';
@@ -1258,9 +1260,8 @@
         const bn      = obGetCF(t, OB_CF.brandName) || t.name;
         const bt      = obGetCF(t, OB_CF.brandType)  || '—';
         const ops     = (t.assignee && t.assignee.name) || '—';
-        const ds      = obGetCF(t, OB_CF.dateSigned);
-        const totalD  = ds && t.completed_at
-          ? Math.floor((new Date(t.completed_at) - new Date(ds)) / 86400000)
+        const totalD  = t.created_at && t.completed_at
+          ? Math.floor((new Date(t.completed_at) - new Date(t.created_at)) / 86400000)
           : null;
         const dsDisp  = ds ? new Date(ds).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
         return `<tr>
