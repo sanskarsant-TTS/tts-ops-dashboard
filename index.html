@@ -712,7 +712,7 @@
           <th>Type</th>
           <th>Ops</th>
           <th>Date Signed</th>
-          <th>Total Days</th>
+          <th title="Adj days (excl. waiting) / Pipeline days (incl. waiting)">Days (adj / total)</th>
         </tr>
       </thead>
       <tbody id="ob-done-body">
@@ -1436,13 +1436,17 @@
         const ops     = (t.assignee && t.assignee.name) || '—';
         const ds      = obGetCF(t, OB_CF.dateSigned);
         const totalD  = t._adjDays != null ? t._adjDays : null;
+        const rawD    = t._rawDays != null && t._rawDays > totalD ? t._rawDays : null;
         const dsDisp  = ds ? new Date(ds).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+        const daysTxt = totalD != null
+          ? `<span class="ob-days d-fast">${totalD}d</span>${rawD ? `<span style="color:#94a3b8;font-size:11px"> / ${rawD}d</span>` : ''}`
+          : '<span style="color:#cbd5e1">—</span>';
         return `<tr>
           <td><strong>${escHtmlEntities(bn)}</strong></td>
           <td style="font-size:11px;color:#64748b">${escHtmlEntities(bt)}</td>
           <td>${obAvatar(ops)}</td>
           <td style="font-size:12px;color:#64748b">${dsDisp}</td>
-          <td><span class="ob-days d-fast">${totalD != null ? totalD+'d' : '—'}</span></td>
+          <td>${daysTxt}</td>
         </tr>`;
       }).join('');
     }
