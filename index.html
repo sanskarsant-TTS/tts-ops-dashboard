@@ -987,6 +987,7 @@
   let obLoaded      = false;
   let obActiveTasks = [];
   let obDoneTasks   = [];
+  let obLiveTasks   = [];
   let obStatusFilter = 'all';
   let obStageFilter  = null;
   let obBlockerFilter = null;
@@ -1147,14 +1148,18 @@
       }));
 
       const all     = results.flat();
+      const LIVE_SEC_ID = '1213232688489808';
       obActiveTasks = all.filter(t => !t.completed);
-      obDoneTasks   = all.filter(t =>  t.completed)
+      const allDone = all.filter(t =>  t.completed)
                          .sort((a, b) => (b.completed_at || '').localeCompare(a.completed_at || ''));
+      obLiveTasks   = allDone.filter(t => t._sectionId === LIVE_SEC_ID);
+      obDoneTasks   = allDone.filter(t => t._sectionId !== LIVE_SEC_ID);
 
       // Step 2: For each brand past Day 0 Setup, fetch task stories to find the exact
       //         date it entered "Requirements Received?" — that's the true onboarding start.
       const needStories = [
         ...obActiveTasks.filter(t => t._step > 1),
+        ...obLiveTasks,
         ...obDoneTasks,
       ];
       if (loadingSpan) loadingSpan.textContent = `Fetching requirement dates (${needStories.length} brands)…`;
@@ -1219,6 +1224,8 @@
     const stageCounts = {};
     OB_SECTIONS.forEach(s => { stageCounts[s.id] = 0; });
     tasks.forEach(t => { if (stageCounts[t._sectionId] !== undefined) stageCounts[t._sectionId]++; });
+    // Live brands (completed in Final Check / Live) count toward the Live pill
+    stageCounts['1213232688489808'] = (stageCounts['1213232688489808'] || 0) + obLiveTasks.length;
 
     /* 2. Pipeline FLOW (top horizontal) */
     const totalForFlow = tasks.length || 1;
@@ -1250,7 +1257,7 @@
     const bindingCnt = stageCounts['1213899559338851'] || 0;
     const liveCnt    = stageCounts['1213232688489808'] || 0;
 
-    obSet('ob-s-active',  tasks.length);
+    obSet('ob-s-active',  tasks.length + obLiveTasks.length);
     obSet('ob-s-avgdays', avgDays != null ? avgDays + 'd' : '—');
     obSet('ob-s-ttok',    tiktokCnt);
     obSet('ob-s-brand',   brandCnt);
@@ -1432,8 +1439,30 @@
       </tr>`;
     }).join('');
 
+    // Live brands (completed in Final Check/Live) — show unless filtered away
+    const showLive = !obStageFilter || obStageFilter === '1213232688489808';
+    const liveRows = (showLive && (obStatusFilter === 'all' || obStatusFilter === 'live') && !obBlockerFilter && !obOpsFilter)
+      ? obLiveTasks.map(t => {
+          const bn  = obGetCF(t, OB_CF.brandName) || t.name;
+          const bt  = obGetCF(t, OB_CF.brandType) || '—';
+          const ops = (t.assignee && t.assignee.name) || '—';
+          const days = t._adjDays != null ? t._adjDays : null;
+          const daysTxt = days != null
+            ? `<span class="ob-days ob-days-ok">${days}d</span>`
+            : '<span style="color:#cbd5e1">—</span>';
+          return `<tr style="background:#f0fdf4">
+            <td><strong>${escHtmlEntities(bn)}</strong></td>
+            <td style="font-size:11px;color:#64748b;white-space:nowrap">${escHtmlEntities(bt)}</td>
+            <td><span style="background:#dcfce7;color:#15803d;font-size:11px;font-weight:600;padding:3px 8px;border-radius:12px">🟢 LIVE</span></td>
+            <td>${obAvatar(ops)}</td>
+            <td><span style="color:#cbd5e1;font-size:11px">—</span></td>
+            <td>${daysTxt}</td>
+            <td><a class="ob-link" href="${t.permalink_url || '#'}" target="_blank">↗</a></td>
+          </tr>`;
+        }).join('')
+      : '';
     document.getElementById('ob-brands-body').innerHTML =
-      rows || `<tr><td colspan="7" class="ob-empty">No brands match the current filter</td></tr>`;
+      (rows + liveRows) || `<tr><td colspan="7" class="ob-empty">No brands match the current filter</td></tr>`;
   }
 
   /* ── Filter helpers ── */
