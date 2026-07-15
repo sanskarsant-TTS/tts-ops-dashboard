@@ -1101,7 +1101,7 @@
   function obGetDays(task) {
     // Return pre-computed adjusted days (null = not yet started)
     if (task._adjDays === undefined) return null;
-    const bn = obGetCF(task, OB_CF.brandName) || task.name || '';
+    const bn = (obGetCF(task, OB_CF.brandName) || task.name || '').trim();
     if (OB_MANUAL_DAYS[bn] !== undefined) return OB_MANUAL_DAYS[bn] || null;
     return task._adjDays > 0 ? task._adjDays : null;
   }
@@ -1190,7 +1190,7 @@
       // Step 2: For each brand past Day 0 Setup, fetch task stories to find the exact
       //         date it entered "Requirements Received?" — that's the true onboarding start.
       const needStories = [
-        ...obActiveTasks.filter(t => t._step > 1),
+        ...obActiveTasks,   // include all active tasks so step-1 brands with history get correct adjDays
         ...obLiveTasks,
         ...obDoneTasks,
       ];
