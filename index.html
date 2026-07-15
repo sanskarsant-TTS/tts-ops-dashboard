@@ -1103,7 +1103,7 @@
   }
 
   /* ── Step progress dots ── */
-  function obStepDots(step, isBlocked) {
+  function obStepDots(step, isBlocked, sectionName) {
     const total = 6;
     let dots = '';
     for (let i = 0; i < total; i++) {
@@ -1111,7 +1111,11 @@
       else if (i < step)         dots += `<span class="ob-progress-dot dp-filled"></span>`;
       else                        dots += `<span class="ob-progress-dot dp-empty"></span>`;
     }
-    const lbl = isBlocked ? '⏸ Paused' : step === 6 ? '✅ Live' : `Step ${step} of 6`;
+    let lbl;
+    if (isBlocked)          lbl = '⏸ ' + (sectionName || 'Waiting/Blocked');
+    else if (step === 6)    lbl = '✅ ' + (sectionName || 'Live');
+    else if (sectionName)   lbl = sectionName;
+    else                    lbl = `Step ${step} of 6`;
     return `<div class="ob-progress">${dots}<span class="ob-progress-label">${lbl}</span></div>`;
   }
 
@@ -1431,7 +1435,7 @@
       return `<tr>
         <td><strong>${escHtmlEntities(bn)}</strong></td>
         <td style="font-size:11px;color:#64748b;white-space:nowrap">${escHtmlEntities(bt)}</td>
-        <td>${obStepDots(step, blocked)}</td>
+        <td>${obStepDots(step, blocked, t._sectionName)}</td>
         <td>${obAvatar(ops)}</td>
         <td>${blkBadge}</td>
         <td>${daysTxt}</td>
