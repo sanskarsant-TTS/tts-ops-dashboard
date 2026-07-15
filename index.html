@@ -1545,7 +1545,7 @@
     }
 
     clearInterval(ticker);
-    renderAll();
+    try { renderAll(); } catch(renderErr) { console.error('renderAll error:', renderErr); }
     document.getElementById('updated-time').textContent =
       'Updated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     document.getElementById('loading').style.display='none';
@@ -1569,7 +1569,7 @@
 
     document.getElementById('s-active').textContent   = active.length;
     document.getElementById('s-p0').textContent       = p0.length;
-    document.getElementById('s-overdue').textContent  = overdue.length;
+    const selOverdue = document.getElementById('s-overdue'); if (selOverdue) selOverdue.textContent = overdue.length;
     document.getElementById('s-hold').textContent     = hold.length;
     const todayStr  = today();
     const cut7d     = new Date(Date.now() -  7*24*60*60*1000).toISOString().slice(0,10);
