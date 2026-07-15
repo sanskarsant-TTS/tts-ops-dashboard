@@ -603,7 +603,7 @@
       <div class="stat-card" style="border-color:#e2e8f0">
         <div class="lbl">Avg Days</div>
         <div class="val" id="ob-s-avgdays" style="color:#334155">—</div>
-        <div class="sub">req received → now</div>
+        <div class="sub">adj. pipeline days</div>
       </div>
       <div class="stat-card" style="border-color:#fee2e2">
         <div class="lbl">Blocked by TikTok</div>
@@ -1018,12 +1018,64 @@
   }
 
   /* ── Days since signed ── */
+  /* ── Stage-exclusion rules for adjusted pipeline days ── */
+  const OB_ALWAYS_EXCLUDE = [
+    'day 0 setup', 'signed', 'routing & am assignment',
+    'waiting/blocked', 'waiting / blocked',
+  ];
+
+  function obParseStageHistory(stories, taskCreatedAt) {
+    // Build ordered list of {date, stage} from stories + initial placement
+    const moves = [{ date: taskCreatedAt.slice(0, 10), stage: 'Day 0 Setup' }];
+    for (const s of stories) {
+      if ((s.resource_subtype || s.type) === 'section_changed' ||
+           s.resource_subtype === 'section_changed') {
+        const txt = s.text || '';
+        let dest = null;
+        if (txt.includes('to "'))       dest = txt.split('to "')[1].split('"')[0];
+        else if (txt.includes("to '"))  dest = txt.split("to '")[1].split("'")[0];
+        if (dest) moves.push({ date: s.created_at.slice(0, 10), stage: dest });
+      }
+    }
+    return moves;
+  }
+
+  function obComputeAdjDays(stories, taskCreatedAt, currentSection, isCompleted, completedAt) {
+    const moves   = obParseStageHistory(stories, taskCreatedAt);
+    const endDate = isCompleted && completedAt
+      ? completedAt.slice(0, 10)
+      : new Date().toISOString().slice(0, 10);
+    let total = 0;
+
+    for (let i = 0; i < moves.length; i++) {
+      const start   = moves[i].date;
+      const end     = i + 1 < moves.length ? moves[i + 1].date : endDate;
+      const days    = Math.max(0, Math.floor((new Date(end) - new Date(start)) / 86400000));
+      const stageLc = moves[i].stage.toLowerCase().trim();
+      const isLast  = i === moves.length - 1;
+
+      // Always exclude
+      if (OB_ALWAYS_EXCLUDE.some(e => stageLc.includes(e))) continue;
+
+      // Final Check / Live: count only if brand stayed (current/completed there)
+      if (stageLc.includes('final check')) {
+        const curLc = (currentSection || '').toLowerCase();
+        if (isLast && (curLc.includes('final check') || isCompleted)) {
+          total += days;
+        }
+        // else: moved back out — skip
+        continue;
+      }
+
+      total += days;
+    }
+    return total;
+  }
+
   function obGetDays(task) {
-    // Only count from requirements received onwards (Day 0 Setup = not yet)
-    if (task._step === 1) return null;
-    const start = task.created_at;
-    if (!start) return null;
-    return Math.floor((Date.now() - new Date(start)) / 86400000);
+    // Return pre-computed adjusted days (null = not yet started)
+    if (task._adjDays === undefined) return null;
+    return task._adjDays > 0 ? task._adjDays : null;
   }
 
   /* ── Initials avatar ── */
@@ -1107,24 +1159,45 @@
       ];
       if (loadingSpan) loadingSpan.textContent = `Fetching requirement dates (${needStories.length} brands)…`;
 
-      // Fetch stories in chunks of 8 to avoid saturating the browser connection pool
+      // Fetch full story history in chunks of 8; paginate if >100 stories
       const CHUNK = 8;
       for (let i = 0; i < needStories.length; i += CHUNK) {
         await Promise.all(needStories.slice(i, i + CHUNK).map(async t => {
           try {
-            const s = await asanaFetch('/tasks/' + t.gid + '/stories', {
-              opt_fields: 'type,created_at,text', limit: 100
+            // Fetch stories (paginate up to 2 pages = 200 stories, covers all but extreme cases)
+            const p1 = await asanaFetch('/tasks/' + t.gid + '/stories', {
+              opt_fields: 'type,resource_subtype,created_at,text', limit: 100
             });
-            // Find first story where task was moved/added to "Requirements Received?"
-            const story = (s.data || []).find(st =>
+            let allStories = p1.data || [];
+            if (p1.next_page && p1.next_page.offset) {
+              try {
+                const p2 = await asanaFetch('/tasks/' + t.gid + '/stories', {
+                  opt_fields: 'type,resource_subtype,created_at,text',
+                  limit: 100, offset: p1.next_page.offset
+                });
+                allStories = allStories.concat(p2.data || []);
+              } catch(e2) { /* use page 1 only */ }
+            }
+
+            // Requirements received date (for reference)
+            const reqStory = allStories.find(st =>
               st.type === 'system' &&
               (st.text || '').toLowerCase().includes('requirements received')
             );
-            t._reqDate = story ? story.created_at : null;
-          } catch(e) { t._reqDate = null; }
+            t._reqDate = reqStory ? reqStory.created_at : null;
+
+            // Compute adjusted days using stage-exclusion rules
+            t._adjDays = obComputeAdjDays(
+              allStories,
+              t.created_at,
+              t._sectionName || '',
+              !!t.completed,
+              t.completed_at || null
+            );
+          } catch(e) { t._reqDate = null; t._adjDays = 0; }
         }));
         if (loadingSpan) loadingSpan.textContent =
-          `Fetching requirement dates… (${Math.min(i + CHUNK, needStories.length)}/${needStories.length})`;
+          `Calculating pipeline days… (${Math.min(i + CHUNK, needStories.length)}/${needStories.length})`;
       }
 
       renderOnboarding();
@@ -1191,7 +1264,7 @@
       const u = activeTracks[0];
       const bn = obGetCF(u, OB_CF.brandName) || u.name;
       document.getElementById('ob-urgent-text').textContent =
-        `Most urgent: ${bn} — ${obGetDays(u)}d in active onboarding`;
+        `Most urgent: ${bn} — ${obGetDays(u)}d adj. pipeline time`;
       urgentEl.style.display = 'flex';
     } else {
       urgentEl.style.display = 'none';
@@ -1292,10 +1365,7 @@
         const bt      = obGetCF(t, OB_CF.brandType)  || '—';
         const ops     = (t.assignee && t.assignee.name) || '—';
         const ds      = obGetCF(t, OB_CF.dateSigned);
-        const reqStart = t._reqDate || t.created_at;
-        const totalD  = reqStart && t.completed_at
-          ? Math.floor((new Date(t.completed_at) - new Date(reqStart)) / 86400000)
-          : null;
+        const totalD  = t._adjDays != null ? t._adjDays : null;
         const dsDisp  = ds ? new Date(ds).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
         return `<tr>
           <td><strong>${escHtmlEntities(bn)}</strong></td>
