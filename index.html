@@ -603,7 +603,7 @@
       <div class="stat-card" style="border-color:#e2e8f0">
         <div class="lbl">Avg Days</div>
         <div class="val" id="ob-s-avgdays" style="color:#334155">—</div>
-        <div class="sub">adj. pipeline days</div>
+        <div class="sub">adj / <span id="ob-s-avgdays-raw" style="color:#94a3b8">—</span> w/ waiting</div>
       </div>
       <div class="stat-card" style="border-color:#fee2e2">
         <div class="lbl">Blocked by TikTok</div>
@@ -632,17 +632,17 @@
       <div class="stat-card" style="border-color:#c7d2fe;flex:1">
         <div class="lbl">3P — Avg Days</div>
         <div class="val" id="ob-avg-3p" style="color:#4f46e5">—</div>
-        <div class="sub">adj. pipeline days</div>
+        <div class="sub">adj / <span id="ob-avg-3p-raw" style="color:#94a3b8">—</span> w/ waiting</div>
       </div>
       <div class="stat-card" style="border-color:#bae6fd;flex:1">
         <div class="lbl">1P New Shop — Avg Days</div>
         <div class="val" id="ob-avg-1p-new" style="color:#0369a1">—</div>
-        <div class="sub">adj. pipeline days</div>
+        <div class="sub">adj / <span id="ob-avg-1p-new-raw" style="color:#94a3b8">—</span> w/ waiting</div>
       </div>
       <div class="stat-card" style="border-color:#bbf7d0;flex:1">
         <div class="lbl">1P Existing Shop — Avg Days</div>
         <div class="val" id="ob-avg-1p-ex" style="color:#15803d">—</div>
-        <div class="sub">adj. pipeline days</div>
+        <div class="sub">adj / <span id="ob-avg-1p-ex-raw" style="color:#94a3b8">—</span> w/ waiting</div>
       </div>
       <div style="flex:3"></div>
     </div>
@@ -690,7 +690,7 @@
           <th>Progress</th>
           <th>Ops</th>
           <th>Blocker</th>
-          <th class="sortable" onclick="obToggleSort(this)">Days ↓</th>
+          <th class="sortable" onclick="obToggleSort(this)" title="Adj days (excl. waiting) / Pipeline days (incl. waiting)">Days (adj / total) ↓</th>
           <th></th>
         </tr>
       </thead>
@@ -1061,7 +1061,13 @@
     return moves;
   }
 
-  function obComputeAdjDays(stories, taskCreatedAt, currentSection, isCompleted, completedAt) {
+  // Exclude list without waiting/blocked — used for "pipeline days incl. wait" metric
+  const OB_EXCLUDE_NO_WAIT = [
+    'day 0 setup', 'signed', 'routing & am assignment', 'binding',
+  ];
+
+  function obComputeAdjDays(stories, taskCreatedAt, currentSection, isCompleted, completedAt, excludeList) {
+    excludeList = excludeList || OB_ALWAYS_EXCLUDE;
     const moves   = obParseStageHistory(stories, taskCreatedAt);
     const endDate = isCompleted && completedAt
       ? completedAt.slice(0, 10)
@@ -1075,8 +1081,8 @@
       const stageLc = moves[i].stage.toLowerCase().trim();
       const isLast  = i === moves.length - 1;
 
-      // Always exclude
-      if (OB_ALWAYS_EXCLUDE.some(e => stageLc.includes(e))) continue;
+      // Exclude based on provided list
+      if (excludeList.some(e => stageLc.includes(e))) continue;
 
       // Final Check / Live: count only if brand stayed (current/completed there)
       if (stageLc.includes('final check')) {
@@ -1084,7 +1090,6 @@
         if (isLast && (curLc.includes('final check') || isCompleted)) {
           total += days;
         }
-        // else: moved back out — skip
         continue;
       }
 
@@ -1225,11 +1230,14 @@
 
             // Compute adjusted days using stage-exclusion rules
             t._adjDays = obComputeAdjDays(
-              allStories,
-              t.created_at,
-              t._sectionName || '',
-              !!t.completed,
-              t.completed_at || null
+              allStories, t.created_at, t._sectionName || '',
+              !!t.completed, t.completed_at || null
+            );
+            // Raw days = same but includes WAITING/BLOCKED time
+            t._rawDays = obComputeAdjDays(
+              allStories, t.created_at, t._sectionName || '',
+              !!t.completed, t.completed_at || null,
+              OB_EXCLUDE_NO_WAIT
             );
           } catch(e) { t._reqDate = null; t._adjDays = 0; }
         }));
@@ -1291,6 +1299,10 @@
 
     obSet('ob-s-active',  tasks.length);
     obSet('ob-s-avgdays', avgDays != null ? avgDays + 'd' : '—');
+    const rawList = tasks.map(t => t._rawDays).filter(d => d != null && d > 0);
+    const avgRaw  = rawList.length ? Math.round(rawList.reduce((s,d)=>s+d,0)/rawList.length) : null;
+    const elRaw = document.getElementById('ob-s-avgdays-raw');
+    if (elRaw) elRaw.textContent = avgRaw != null ? avgRaw + 'd' : '—';
     obSet('ob-s-ttok',    tiktokCnt);
     obSet('ob-s-brand',   brandCnt);
     obSet('ob-s-binding', bindingCnt);
@@ -1298,19 +1310,22 @@
 
     // Avg days by brand type (active + live brands with computed days)
     const allForAvg = [...tasks, ...obLiveTasks];
-    function avgByType(keyword) {
+    function avgByType(keyword, useRaw) {
       const ds = allForAvg
         .filter(t => (obGetCF(t, OB_CF.brandType) || '').toLowerCase().includes(keyword))
-        .map(t => obGetDays(t))
+        .map(t => useRaw ? t._rawDays : obGetDays(t))
         .filter(d => d !== null && d > 0);
       return ds.length ? Math.round(ds.reduce((a,b)=>a+b,0)/ds.length) : null;
     }
-    const avg3p    = avgByType('3p');
-    const avg1pNew = avgByType('new shop');
-    const avg1pEx  = avgByType('existing shop');
+    const avg3p    = avgByType('3p');    const avg3pR    = avgByType('3p', true);
+    const avg1pNew = avgByType('new shop'); const avg1pNewR = avgByType('new shop', true);
+    const avg1pEx  = avgByType('existing shop'); const avg1pExR  = avgByType('existing shop', true);
     obSet('ob-avg-3p',    avg3p    != null ? avg3p    + 'd' : '—');
     obSet('ob-avg-1p-new',avg1pNew != null ? avg1pNew + 'd' : '—');
     obSet('ob-avg-1p-ex', avg1pEx  != null ? avg1pEx  + 'd' : '—');
+    const s3r = document.getElementById('ob-avg-3p-raw');      if(s3r) s3r.textContent = avg3pR != null ? avg3pR+'d' : '—';
+    const snr = document.getElementById('ob-avg-1p-new-raw'); if(snr) snr.textContent = avg1pNewR != null ? avg1pNewR+'d' : '—';
+    const ser = document.getElementById('ob-avg-1p-ex-raw');  if(ser) ser.textContent = avg1pExR  != null ? avg1pExR+'d'  : '—';
 
     /* 4. Urgent callout — longest active (not paused) */
     const activeTracks = tasks.filter(t => !obIsBlocked(t)).sort((a,b) => (obGetDays(b)||0) - (obGetDays(a)||0));
@@ -1468,7 +1483,10 @@
       const bt      = obGetCF(t, OB_CF.brandType) || '—';
       const ops     = (t.assignee && t.assignee.name) || '—';
       const days    = obGetDays(t);
-      const daysTxt = days != null ? `<span class="ob-days ${obDaysCls(days)}">${days}d</span>` : '<span style="color:#cbd5e1">—</span>';
+      const rawDays = t._rawDays != null && t._rawDays > days ? t._rawDays : null;
+      const daysTxt = days != null
+        ? `<span class="ob-days ${obDaysCls(days)}">${days}d</span>${rawDays ? `<span style="color:#94a3b8;font-size:11px"> / ${rawDays}d</span>` : ''}`
+        : '<span style="color:#cbd5e1">—</span>';
       const blocked = obIsBlocked(t);
       const step    = t._step || 0;
       const blk     = obBlocker(t);
