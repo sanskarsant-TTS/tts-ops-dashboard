@@ -627,6 +627,26 @@
       </div>
     </div>
 
+    <!-- Avg by brand type -->
+    <div class="ob-summary-row" style="margin-top:10px">
+      <div class="stat-card" style="border-color:#c7d2fe;flex:1">
+        <div class="lbl">3P — Avg Days</div>
+        <div class="val" id="ob-avg-3p" style="color:#4f46e5">—</div>
+        <div class="sub">adj. pipeline days</div>
+      </div>
+      <div class="stat-card" style="border-color:#bae6fd;flex:1">
+        <div class="lbl">1P New Shop — Avg Days</div>
+        <div class="val" id="ob-avg-1p-new" style="color:#0369a1">—</div>
+        <div class="sub">adj. pipeline days</div>
+      </div>
+      <div class="stat-card" style="border-color:#bbf7d0;flex:1">
+        <div class="lbl">1P Existing Shop — Avg Days</div>
+        <div class="val" id="ob-avg-1p-ex" style="color:#15803d">—</div>
+        <div class="sub">adj. pipeline days</div>
+      </div>
+      <div style="flex:3"></div>
+    </div>
+
     <!-- Urgent callout -->
     <div class="ob-urgent-bar" id="ob-urgent" style="display:none">
       ⚠ <span id="ob-urgent-text"></span>
@@ -1073,9 +1093,16 @@
     return total;
   }
 
+  // Manual day overrides (brand name → days) for cases where auto-calc is wrong
+  const OB_MANUAL_DAYS = {
+    'Swedish Candy': 3,
+  };
+
   function obGetDays(task) {
     // Return pre-computed adjusted days (null = not yet started)
     if (task._adjDays === undefined) return null;
+    const bn = obGetCF(task, OB_CF.brandName) || task.name || '';
+    if (OB_MANUAL_DAYS[bn] !== undefined) return OB_MANUAL_DAYS[bn] || null;
     return task._adjDays > 0 ? task._adjDays : null;
   }
 
@@ -1268,6 +1295,22 @@
     obSet('ob-s-brand',   brandCnt);
     obSet('ob-s-binding', bindingCnt);
     obSet('ob-s-live',    liveCnt);
+
+    // Avg days by brand type (active + live brands with computed days)
+    const allForAvg = [...tasks, ...obLiveTasks];
+    function avgByType(keyword) {
+      const ds = allForAvg
+        .filter(t => (obGetCF(t, OB_CF.brandType) || '').toLowerCase().includes(keyword))
+        .map(t => obGetDays(t))
+        .filter(d => d !== null && d > 0);
+      return ds.length ? Math.round(ds.reduce((a,b)=>a+b,0)/ds.length) : null;
+    }
+    const avg3p    = avgByType('3p');
+    const avg1pNew = avgByType('new shop');
+    const avg1pEx  = avgByType('existing shop');
+    obSet('ob-avg-3p',    avg3p    != null ? avg3p    + 'd' : '—');
+    obSet('ob-avg-1p-new',avg1pNew != null ? avg1pNew + 'd' : '—');
+    obSet('ob-avg-1p-ex', avg1pEx  != null ? avg1pEx  + 'd' : '—');
 
     /* 4. Urgent callout — longest active (not paused) */
     const activeTracks = tasks.filter(t => !obIsBlocked(t)).sort((a,b) => (obGetDays(b)||0) - (obGetDays(a)||0));
