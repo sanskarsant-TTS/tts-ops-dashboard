@@ -1131,6 +1131,12 @@
     }).join('');
     document.getElementById('ob-bk-adj').textContent = adjTotal + 'd';
     document.getElementById('ob-bk-raw').textContent = rawTotal + 'd';
+    // Build counted-stages breakdown line
+    const countedStages = rows
+      .filter(r => !r.baseExcl && !r.waitExcl && (!r.isFinal || r.fcCounted) && r.days > 0)
+      .map(r => `${r.stage}: ${r.days}d`);
+    const stagesEl = document.getElementById('ob-bk-adj-stages');
+    if (stagesEl) stagesEl.textContent = countedStages.length ? countedStages.join('  ·  ') : '—';
     const x = Math.min(evt.clientX + 10, window.innerWidth - 360);
     const y = Math.min(evt.clientY + 10, window.innerHeight - 320);
     pop.style.left = x + 'px';
@@ -2425,12 +2431,15 @@
   <span class="ob-bk-close" onclick="document.getElementById('ob-breakdown-pop').style.display='none'">✕</span>
   <h4 id="ob-bk-title">Stage Breakdown</h4>
   <div id="ob-bk-rows"></div>
-  <div class="ob-bk-total">
-    <span>Adj days (excl. waiting)</span>
-    <span id="ob-bk-adj" style="font-weight:700;color:#16a34a"></span>
+  <div class="ob-bk-total" style="flex-direction:column;gap:4px">
+    <div style="display:flex;justify-content:space-between;width:100%">
+      <span style="color:#16a34a;font-weight:600">Onboarding days <span style="font-size:10px;font-weight:400;color:#94a3b8">(excl. waiting)</span></span>
+      <span id="ob-bk-adj" style="font-weight:700;color:#16a34a"></span>
+    </div>
+    <div id="ob-bk-adj-stages" style="font-size:11px;color:#64748b;line-height:1.6"></div>
   </div>
   <div class="ob-bk-total" style="margin-top:4px;padding-top:4px;border-top:none">
-    <span>Pipeline days (incl. waiting)</span>
+    <span style="color:#94a3b8">Total pipeline days <span style="font-size:10px">(incl. waiting)</span></span>
     <span id="ob-bk-raw" style="font-weight:700;color:#94a3b8"></span>
   </div>
 </div>
