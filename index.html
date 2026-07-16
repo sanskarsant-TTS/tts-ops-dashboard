@@ -266,6 +266,9 @@
 
     /* Filter row */
     .ob-filter-row { display:flex; gap:7px; flex-wrap:wrap; }
+    .ob-type-btn { padding:5px 13px; border-radius:99px; border:1px solid #e2e8f0; background:white; font-size:12px; color:#64748b; cursor:pointer; transition:all .15s; }
+    .ob-type-btn:hover { border-color:#6366f1; color:#6366f1; }
+    .ob-type-btn.ob-f-active { background:#6366f1; border-color:#6366f1; color:white; font-weight:600; }
     .ob-filter-btn { padding:5px 13px; font-size:12px; border:1px solid #e2e8f0; border-radius:20px; background:white; color:#64748b; cursor:pointer; transition:all .15s; }
     .ob-filter-btn:hover { border-color:#6366f1; color:#6366f1; }
     .ob-filter-btn.ob-f-active { background:#6366f1; color:white; border-color:#6366f1; }
@@ -697,6 +700,13 @@
         <button class="ob-filter-btn"             data-f="waiting" onclick="obSetStatusFilter('waiting')">⏳ Waiting</button>
         <button class="ob-filter-btn"             data-f="live"    onclick="obSetStatusFilter('live')">✅ Live</button>
       </div>
+      <div class="ob-filter-row" style="margin-top:5px">
+        <button class="ob-type-btn ob-f-active" data-t="all"      onclick="obSetTypeFilter(null)">All Types</button>
+        <button class="ob-type-btn"             data-t="3p"       onclick="obSetTypeFilter('3p')">3P</button>
+        <button class="ob-type-btn"             data-t="new shop" onclick="obSetTypeFilter('new shop')">1P – New Shop</button>
+        <button class="ob-type-btn"             data-t="existing" onclick="obSetTypeFilter('existing shop')">1P – Existing Shop</button>
+        <button class="ob-type-btn"             data-t="unknown"  onclick="obSetTypeFilter('unknown')">Unknown</button>
+      </div>
     </div>
 
     <table class="ob-brands-table">
@@ -1026,6 +1036,7 @@
   let obDoneTasks   = [];
   let obLiveTasks   = [];
   let obStatusFilter = 'all';
+  let obTypeFilter   = null;
   let obStageFilter  = null;
   let obBlockerFilter = null;
   let obOpsFilter    = null;
@@ -1562,6 +1573,15 @@
     else if (obStatusFilter === 'waiting') filtered = filtered.filter(t => t._sectionType === 'waiting');
     else if (obStatusFilter === 'live')    filtered = filtered.filter(t => t._sectionType === 'live');
 
+    // Brand type filter
+    if (obTypeFilter) {
+      if (obTypeFilter === 'unknown') {
+        filtered = filtered.filter(t => !(obGetCF(t, OB_CF.brandType) || '').trim());
+      } else {
+        filtered = filtered.filter(t => (obGetCF(t, OB_CF.brandType) || '').toLowerCase().includes(obTypeFilter));
+      }
+    }
+
     // Stage filter
     if (obStageFilter) filtered = filtered.filter(t => t._sectionId === obStageFilter);
 
@@ -1615,6 +1635,13 @@
   }
 
   /* ── Filter helpers ── */
+  function obSetTypeFilter(t) {
+    obTypeFilter = t;
+    document.querySelectorAll('.ob-type-btn').forEach(b =>
+      b.classList.toggle('ob-f-active', (t === null && b.dataset.t === 'all') || b.dataset.t === t)
+    );
+    renderObTable();
+  }
   function obSetStatusFilter(f) {
     obStatusFilter = f;
     document.querySelectorAll('.ob-filter-btn').forEach(b =>
@@ -1647,6 +1674,7 @@
     obStageFilter   = null;
     obBlockerFilter = null;
     obStatusFilter  = 'all';
+    obTypeFilter    = null;
     renderOnboarding();
   }
   function obToggleSort(el) {
