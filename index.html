@@ -1393,7 +1393,7 @@
     obSet('ob-s-live',    liveCnt);
 
     // Avg days by brand type (active + live brands with computed days)
-    const allForAvg = [...tasks, ...obLiveTasks];
+    const allForAvg = [...obActiveTasks, ...obDoneTasks]; // all active + all completed
     function avgByType(keyword, useRaw) {
       const ds = allForAvg
         .filter(t => (obGetCF(t, OB_CF.brandType) || '').toLowerCase().includes(keyword))
