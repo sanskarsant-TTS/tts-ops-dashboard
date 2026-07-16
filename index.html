@@ -1058,9 +1058,8 @@
   /* ── Days since signed ── */
   /* ── Stage-exclusion rules for adjusted pipeline days ── */
   const OB_ALWAYS_EXCLUDE = [
-    'signed',
-    'waiting/blocked', 'waiting / blocked',
-    'binding',
+    'day 0 setup', 'signed', 'routing & am assignment',
+    'waiting/blocked', 'waiting / blocked', 'binding',
   ];
 
   function obParseStageHistory(stories, taskCreatedAt) {
@@ -1096,10 +1095,12 @@
       const baseExcl = ['day 0 setup','signed','routing & am assignment','binding']
         .some(e => stageLc.includes(e));
       const waitExcl = ['waiting/blocked','waiting / blocked'].some(e => stageLc.includes(e));
+      // rawExcl: for "total pipeline days" — only signed + binding excluded, day 0 setup kept in
+      const rawExcl  = ['signed','binding'].some(e => stageLc.includes(e));
       const isFinal  = stageLc.includes('final check');
       const curLc    = (currentSection || '').toLowerCase();
       const fcCounted = isFinal && isLast && (curLc.includes('final check') || isCompleted);
-      rows.push({ stage, days, baseExcl, waitExcl, isFinal, fcCounted });
+      rows.push({ stage, days, baseExcl, waitExcl, rawExcl, isFinal, fcCounted });
     }
     return rows;
   }
@@ -1115,15 +1116,21 @@
     let adjTotal = 0, rawTotal = 0;
     document.getElementById('ob-bk-rows').innerHTML = rows.map(r => {
       const countAdj = !r.baseExcl && !r.waitExcl && (!r.isFinal || r.fcCounted);
-      const countRaw = !r.baseExcl && (!r.isFinal || r.fcCounted);
+      const countRaw = !r.rawExcl  && (!r.isFinal || r.fcCounted); // incl. day 0 setup + waiting
       if (countAdj) adjTotal += r.days;
       if (countRaw) rawTotal += r.days;
+      // badge: waiting/blocked stages get yellow; signed/binding get gray; day 0 setup gets "setup"
       const badge = r.waitExcl
         ? '<span class="ob-bk-badge ob-bk-wait">waiting</span>'
-        : r.baseExcl || (r.isFinal && !r.fcCounted)
+        : (r.rawExcl && !r.waitExcl)
+        ? '<span class="ob-bk-badge ob-bk-skip">excluded</span>'
+        : r.baseExcl
+        ? '<span class="ob-bk-badge ob-bk-skip">setup</span>'
+        : (r.isFinal && !r.fcCounted)
         ? '<span class="ob-bk-badge ob-bk-skip">excluded</span>'
         : '';
-      const clr = countAdj ? '#16a34a' : '#94a3b8';
+      // Green = counts in onboarding adj; orange = in total but not adj; gray = fully excluded
+      const clr = countAdj ? '#16a34a' : countRaw ? '#f59e0b' : '#94a3b8';
       return `<div class="ob-bk-row">
         <span class="ob-bk-stage">${r.stage}${badge}</span>
         <span class="ob-bk-days" style="color:${clr}">${r.days}d</span>
