@@ -1058,8 +1058,9 @@
   /* ── Days since signed ── */
   /* ── Stage-exclusion rules for adjusted pipeline days ── */
   const OB_ALWAYS_EXCLUDE = [
-    'day 0 setup', 'signed', 'routing & am assignment',
-    'waiting/blocked', 'waiting / blocked', 'binding',
+    'signed',
+    'waiting/blocked', 'waiting / blocked',
+    'binding',
   ];
 
   function obParseStageHistory(stories, taskCreatedAt) {
@@ -1143,7 +1144,8 @@
 
   // Exclude list without waiting/blocked — used for "pipeline days incl. wait" metric
   const OB_EXCLUDE_NO_WAIT = [
-    'day 0 setup', 'signed', 'routing & am assignment', 'binding',
+    'signed',
+    'binding',
   ];
 
   function obComputeAdjDays(stories, taskCreatedAt, currentSection, isCompleted, completedAt, excludeList) {
