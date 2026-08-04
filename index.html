@@ -712,9 +712,6 @@
     <div class="ob-panel-title" style="margin:18px 0 10px">👤 Ops workload <span style="color:#94a3b8;font-size:10px;text-transform:none;letter-spacing:0;font-weight:400">(click to filter table)</span></div>
     <div class="ob-workload-grid" id="ob-workload-grid"></div>
 
-    <!-- Per-person onboarded brands -->
-    <div id="ob-person-onboarded" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px"></div>
-
     <!-- Brands table header + filters -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin:22px 0 10px">
       <span style="font-size:13px;font-weight:600;color:#334155">
@@ -1593,37 +1590,6 @@
       </div>`;
     }).join('');
     document.getElementById('ob-workload-grid').innerHTML = wlHtml || '<span style="color:#94a3b8">No data</span>';
-
-    /* 9b. Per-person onboarded brands */
-    const poHtml = OB_TEAM_ORDER.map(first => {
-      const myDone = obDoneTasks.filter(t => {
-        const n = (t.assignee && t.assignee.name) || '';
-        return n.split(' ')[0] === first;
-      }).sort((a,b) => (b.completed_at||'').localeCompare(a.completed_at||''));
-      const rows = myDone.map(t => {
-        const bn   = obGetCF(t, OB_CF.brandName) || t.name;
-        const bt   = (obGetCF(t, OB_CF.brandType) || '').replace('TikTok Shop – ','').replace('TikTok Shop - ','') || '—';
-        const adj  = t._adjDays != null ? t._adjDays + 'd' : '—';
-        const raw  = t._rawDays != null && t._rawDays > t._adjDays ? ' / ' + t._rawDays + 'd' : '';
-        return `<div class="ob-po-row">
-          <div>
-            <div class="ob-po-brand" title="${escHtmlEntities(bn)}">${escHtmlEntities(bn)}</div>
-            <div class="ob-po-type">${escHtmlEntities(bt)}</div>
-          </div>
-          <div class="ob-po-days">${adj}<span style="color:#cbd5e1;font-weight:400">${raw}</span></div>
-        </div>`;
-      }).join('');
-      const fakeName = obDoneTasks.find(t => (t.assignee&&t.assignee.name||'').split(' ')[0]===first)?.assignee?.name || first;
-      return `<div class="ob-po-col">
-        <div class="ob-po-hdr">
-          ${obAvatar(fakeName || first)}
-          <span class="ob-po-hdr-name">${first}</span>
-          <span class="ob-po-hdr-cnt">${myDone.length} onboarded</span>
-        </div>
-        ${rows || '<div class="ob-po-empty">None yet</div>'}
-      </div>`;
-    }).join('');
-    document.getElementById('ob-person-onboarded').innerHTML = poHtml;
 
     /* 10. Completed table */
     obSet('ob-done-count', obDoneTasks.length);
