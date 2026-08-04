@@ -274,7 +274,7 @@
     .ob-filter-btn.ob-f-active { background:#6366f1; color:white; border-color:#6366f1; }
 
     /* Ops workload */
-    .ob-workload-grid { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:24px; }
+    .ob-workload-grid { display:flex; gap:12px; flex-wrap:nowrap; margin-bottom:24px; }
     .ob-wl-card { background:white; border:1px solid #e2e8f0; border-radius:10px; padding:12px 16px; min-width:120px; cursor:pointer; transition:border-color .15s; }
     .ob-wl-card:hover { border-color:#6366f1; }
     .ob-wl-card.ob-sel { border-color:#6366f1; background:#eef2ff; }
@@ -282,6 +282,15 @@
     .ob-wl-name { font-size:12px; font-weight:600; color:#1e293b; }
     .ob-wl-stats { font-size:11px; color:#64748b; display:flex; flex-direction:column; gap:2px; }
     .ob-wl-stat { display:flex; justify-content:space-between; gap:12px; }
+    /* Enhanced v2 workload cards */
+    .ob-wl-card-v2 { min-width:170px; flex:1; }
+    .ob-wl-stats-v2 { display:flex; flex-direction:column; gap:5px; }
+    .ob-wl-stat-v2 { display:flex; justify-content:space-between; align-items:center; gap:16px; }
+    .ob-wl-stat-lbl { font-size:11px; color:#94a3b8; }
+    .ob-wl-val-v2 { font-size:13px; font-weight:700; color:#1e293b; }
+    .ob-wl-days { font-size:15px; }
+    .ob-wl-red { color:#ef4444 !important; }
+    .ob-wl-divider { height:1px; background:#f1f5f9; margin:3px 0; }
     .ob-wl-val  { font-weight:600; color:#1e293b; }
 
     /* Urgent callout */
@@ -1512,27 +1521,63 @@
     /* 8. Brand table */
     renderObTable();
 
-    /* 9. Ops workload */
+    /* 9. Ops workload — per-person cards (active brands + avg timeline) */
+    const OB_TEAM_ORDER = ['Sanskar','Samarth','Manish','Balkrishna','Riya'];
     const opsMap = {};
+    // Active brands
     tasks.forEach(t => {
       const name  = (t.assignee && t.assignee.name) || 'Unassigned';
       const first = name.split(' ')[0];
-      if (!opsMap[first]) opsMap[first] = { name, brands: 0, blocked: 0 };
-      opsMap[first].brands++;
+      if (!OB_TEAM_ORDER.includes(first)) return;
+      if (!opsMap[first]) opsMap[first] = { name, active: 0, blocked: 0, adjDays: [], rawDays: [] };
+      opsMap[first].active++;
       if (obIsBlocked(t)) opsMap[first].blocked++;
+      if (t._adjDays != null) opsMap[first].adjDays.push(t._adjDays);
+      if (t._rawDays != null) opsMap[first].rawDays.push(t._rawDays);
     });
-    const wlHtml = Object.values(opsMap)
-      .sort((a,b) => b.brands - a.brands)
-      .map(p => {
-        const isSel = obOpsFilter === p.name.split(' ')[0];
-        return `<div class="ob-wl-card ${isSel ? 'ob-sel' : ''}" onclick="obToggleOps('${p.name.split(' ')[0]}')">
-          <div class="ob-wl-top">${obAvatar(p.name)}<span class="ob-wl-name">${p.name.split(' ')[0]}</span></div>
-          <div class="ob-wl-stats">
-            <div class="ob-wl-stat"><span class="ob-wl-stat-lbl">Brands</span><span class="ob-wl-val">${p.brands}</span></div>
-            <div class="ob-wl-stat"><span class="ob-wl-stat-lbl">Blocked</span><span class="ob-wl-val ${p.blocked>0?'':'ob-wl-val'}">${p.blocked}</span></div>
+    // Completed brands — include in avg
+    obDoneTasks.forEach(t => {
+      const name  = (t.assignee && t.assignee.name) || 'Unassigned';
+      const first = name.split(' ')[0];
+      if (!OB_TEAM_ORDER.includes(first)) return;
+      if (!opsMap[first]) opsMap[first] = { name, active: 0, blocked: 0, adjDays: [], rawDays: [] };
+      if (t._adjDays != null) opsMap[first].adjDays.push(t._adjDays);
+      if (t._rawDays != null) opsMap[first].rawDays.push(t._rawDays);
+    });
+    const wlHtml = OB_TEAM_ORDER.map(first => {
+      const p = opsMap[first];
+      if (!p) {
+        // Person exists in team but has 0 tasks
+        const fakeName = first;
+        const isSel = obOpsFilter === first;
+        return `<div class="ob-wl-card ob-wl-card-v2 ${isSel?'ob-sel':''}" onclick="obToggleOps('${first}')">
+          <div class="ob-wl-top">${obAvatar(fakeName)}<span class="ob-wl-name">${first}</span></div>
+          <div class="ob-wl-stats-v2">
+            <div class="ob-wl-stat-v2"><span class="ob-wl-stat-lbl">Active</span><span class="ob-wl-val-v2">0</span></div>
+            <div class="ob-wl-stat-v2"><span class="ob-wl-stat-lbl">Blocked</span><span class="ob-wl-val-v2">0</span></div>
+            <div class="ob-wl-divider"></div>
+            <div class="ob-wl-stat-v2"><span class="ob-wl-stat-lbl">Avg Adj</span><span class="ob-wl-val-v2 ob-wl-days">—</span></div>
+            <div class="ob-wl-stat-v2"><span class="ob-wl-stat-lbl">Avg Total</span><span class="ob-wl-val-v2" style="color:#94a3b8">—</span></div>
           </div>
         </div>`;
-      }).join('');
+      }
+      const isSel = obOpsFilter === first;
+      const adjArr = p.adjDays.filter(d=>d>0);
+      const rawArr = p.rawDays.filter(d=>d>0);
+      const avgAdj = adjArr.length ? Math.round(adjArr.reduce((a,b)=>a+b,0)/adjArr.length) : null;
+      const avgRaw = rawArr.length ? Math.round(rawArr.reduce((a,b)=>a+b,0)/rawArr.length) : null;
+      const adjClr = avgAdj==null?'#94a3b8':avgAdj<=20?'#16a34a':avgAdj<=35?'#f59e0b':'#ef4444';
+      return `<div class="ob-wl-card ob-wl-card-v2 ${isSel?'ob-sel':''}" onclick="obToggleOps('${first}')">
+        <div class="ob-wl-top">${obAvatar(p.name)}<span class="ob-wl-name">${first}</span></div>
+        <div class="ob-wl-stats-v2">
+          <div class="ob-wl-stat-v2"><span class="ob-wl-stat-lbl">Active</span><span class="ob-wl-val-v2">${p.active}</span></div>
+          <div class="ob-wl-stat-v2"><span class="ob-wl-stat-lbl">Blocked</span><span class="ob-wl-val-v2 ${p.blocked>0?'ob-wl-red':''}">${p.blocked}</span></div>
+          <div class="ob-wl-divider"></div>
+          <div class="ob-wl-stat-v2"><span class="ob-wl-stat-lbl">Avg Adj</span><span class="ob-wl-val-v2 ob-wl-days" style="color:${adjClr}">${avgAdj!=null?avgAdj+'d':'—'}</span></div>
+          <div class="ob-wl-stat-v2"><span class="ob-wl-stat-lbl">Avg Total</span><span class="ob-wl-val-v2" style="color:#64748b">${avgRaw!=null?avgRaw+'d':'—'}</span></div>
+        </div>
+      </div>`;
+    }).join('');
     document.getElementById('ob-workload-grid').innerHTML = wlHtml || '<span style="color:#94a3b8">No data</span>';
 
     /* 10. Completed table */
