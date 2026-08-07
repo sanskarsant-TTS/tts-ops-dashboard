@@ -1017,16 +1017,17 @@
 
   // All Asana sections with step # (1-6) and type
   const OB_SECTIONS = [
-    { id: '1213113488679845', name: 'Day 0 Setup',          shortName: 'Day 0 Setup',       step: 1, type: 'default' },
-    { id: '1215733164073077', name: 'Requirements Received', shortName: 'Req. Received',    step: 1, type: 'default' },
-    { id: '1213232688489800', name: 'Routing & AM Assign',   shortName: 'AM Assignment',    step: 2, type: 'default' },
-    { id: '1213232688489802', name: 'Shop Build',            shortName: 'Shop Build',        step: 2, type: 'default' },
-    { id: '1213232688489804', name: 'CQ + Brand Auth',       shortName: 'CQ + Brand Auth',  step: 3, type: 'default' },
-    { id: '1215733164073088', name: 'Product Listing',       shortName: 'Product Listing',  step: 4, type: 'default' },
-    { id: '1215733164073091', name: 'Waiting for Inventory', shortName: 'Waiting Inv.',     step: 4, type: 'waiting' },
-    { id: '1213232688489805', name: 'WAITING / BLOCKED',     shortName: 'Waiting/Blocked',  step: 0, type: 'blocked' },
-    { id: '1213232688489808', name: 'Final Check / Live',    shortName: 'Live',             step: 6, type: 'live'    },
-    { id: '1213899559338851', name: 'Binding',               shortName: 'Binding',          step: 5, type: 'default' },
+    { id: '1213113488679845', name: 'Day 0 Setup',            shortName: 'Day 0 Setup',       step: 1, type: 'default' },
+    { id: '1215733164073077', name: 'Requirements Received',  shortName: 'Req. Received',    step: 1, type: 'default' },
+    { id: '1213232688489800', name: 'Routing & AM Assign',    shortName: 'AM Assignment',    step: 2, type: 'default' },
+    { id: '1213232688489802', name: 'Shop Build',             shortName: 'Shop Build',        step: 2, type: 'default' },
+    { id: '1213232688489804', name: 'CQ + Brand Auth',        shortName: 'CQ + Brand Auth',  step: 3, type: 'default' },
+    { id: '1215733164073088', name: 'Product Listing - TTS',  shortName: 'Listing (TTS)',    step: 4, type: 'default' },
+    { id: '1217157171189256', name: 'Product Listing - Shelf',shortName: 'Listing (Shelf)',  step: 4, type: 'default' },
+    { id: '1215733164073091', name: 'Waiting for Inventory',  shortName: 'Waiting Inv.',     step: 4, type: 'waiting' },
+    { id: '1213232688489805', name: 'WAITING / BLOCKED',      shortName: 'Waiting/Blocked',  step: 0, type: 'blocked' },
+    { id: '1213232688489808', name: 'Final Check / Live',     shortName: 'Live',             step: 6, type: 'live'    },
+    { id: '1213899559338851', name: 'Binding',                shortName: 'Binding',          step: 5, type: 'default' },
   ];
 
   // Visual flow stages (collapsed into 6 steps for display)
@@ -1034,7 +1035,7 @@
     { label: 'Day 0 Setup',    ids: ['1213113488679845','1215733164073077','1213232688489800'] },
     { label: 'Shop Build',     ids: ['1213232688489802'] },
     { label: 'CQ + Brand Auth',ids: ['1213232688489804'] },
-    { label: 'Product Listing',ids: ['1215733164073088','1215733164073091'] },
+    { label: 'Product Listing',ids: ['1215733164073088','1217157171189256','1215733164073091'] },
     { label: 'Binding',        ids: ['1213899559338851'] },
     { label: 'Live',           ids: ['1213232688489808'] },
   ];
