@@ -1565,6 +1565,7 @@
         return `<div class="ob-wl-card ob-wl-card-v2 ${isSel?'ob-sel':''}" onclick="obToggleOps('${first}')">
           <div class="ob-wl-top">${obAvatar(fakeName)}<span class="ob-wl-name">${first}</span></div>
           <div class="ob-wl-stats-v2">
+            <div class="ob-wl-stat-v2"><span class="ob-wl-stat-lbl">Total</span><span class="ob-wl-val-v2">0</span></div>
             <div class="ob-wl-stat-v2"><span class="ob-wl-stat-lbl">Active</span><span class="ob-wl-val-v2">0</span></div>
             <div class="ob-wl-stat-v2"><span class="ob-wl-stat-lbl">Blocked</span><span class="ob-wl-val-v2">0</span></div>
             <div class="ob-wl-divider"></div>
@@ -1582,7 +1583,8 @@
       return `<div class="ob-wl-card ob-wl-card-v2 ${isSel?'ob-sel':''}" onclick="obToggleOps('${first}')">
         <div class="ob-wl-top">${obAvatar(p.name)}<span class="ob-wl-name">${first}</span></div>
         <div class="ob-wl-stats-v2">
-          <div class="ob-wl-stat-v2"><span class="ob-wl-stat-lbl">Active</span><span class="ob-wl-val-v2">${p.active}</span></div>
+          <div class="ob-wl-stat-v2"><span class="ob-wl-stat-lbl">Total</span><span class="ob-wl-val-v2">${p.active}</span></div>
+          <div class="ob-wl-stat-v2"><span class="ob-wl-stat-lbl">Active</span><span class="ob-wl-val-v2">${p.active - p.blocked}</span></div>
           <div class="ob-wl-stat-v2"><span class="ob-wl-stat-lbl">Blocked</span><span class="ob-wl-val-v2 ${p.blocked>0?'ob-wl-red':''}">${p.blocked}</span></div>
           <div class="ob-wl-divider"></div>
           <div class="ob-wl-stat-v2"><span class="ob-wl-stat-lbl">Avg Adj</span><span class="ob-wl-val-v2 ob-wl-days" style="color:${adjClr}">${avgAdj!=null?avgAdj+'d':'—'}</span></div>
