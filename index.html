@@ -1052,6 +1052,12 @@
 
   const OB_AV_COLORS = { Sanskar:'#6366f1', Samarth:'#0ea5e9', Manish:'#10b981', Saat:'#f59e0b', Balkrishna:'#ec4899', Riya:'#f43f5e', Andres:'#06b6d4' };
 
+  // Manual corrections for brands whose Asana stage moves weren't logged on time,
+  // so the computed pipeline-days would otherwise be wrong. Keyed by brand name.
+  const OB_MANUAL_OVERRIDES = {
+    'Head & Shoulders': { adjDays: 1, rawDays: 1 },
+  };
+
   let obLoaded      = false;
   let obActiveTasks = [];
   let obDoneTasks   = [];
@@ -1371,6 +1377,14 @@
               !!t.completed, t.completed_at || null
             );
           } catch(e) { t._reqDate = null; t._adjDays = 0; }
+
+          // Apply manual correction if this brand's Asana stage move wasn't logged on time
+          const _bn = (obGetCF(t, OB_CF.brandName) || t.name || '').trim();
+          if (OB_MANUAL_OVERRIDES[_bn]) {
+            const ov = OB_MANUAL_OVERRIDES[_bn];
+            if (ov.adjDays != null) t._adjDays = ov.adjDays;
+            if (ov.rawDays != null) t._rawDays = ov.rawDays;
+          }
         }));
         if (loadingSpan) loadingSpan.textContent =
           `Calculating pipeline days… (${Math.min(i + CHUNK, needStories.length)}/${needStories.length})`;
