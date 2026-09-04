@@ -291,6 +291,10 @@
     .ob-wl-days { font-size:15px; }
     .ob-wl-red { color:#ef4444 !important; }
     .ob-wl-divider { height:1px; background:#f1f5f9; margin:3px 0; }
+    .ob-wl-type-row { display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+    .ob-wl-type-lbl { font-size:10px; color:#94a3b8; text-transform:uppercase; letter-spacing:.02em; }
+    .ob-wl-type-val { font-size:12px; font-weight:700; color:#1e293b; }
+    .ob-wl-type-sub { font-size:10px; color:#94a3b8; }
     /* Per-person onboarded panels */
     .ob-po-col { background:white; border:1px solid #e2e8f0; border-radius:10px; overflow:hidden; }
     .ob-po-hdr { padding:10px 14px; background:#f8fafc; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; gap:8px; }
@@ -1549,27 +1553,48 @@
 
     /* 9. Ops workload — per-person cards (active brands + avg timeline) */
     const OB_TEAM_ORDER = ['Sanskar','Samarth','Manish','Balkrishna','Riya'];
+    const OB_TYPE_KEYWORDS = [
+      { key: '3p',    label: '3P',            kw: '3p' },
+      { key: 'new',   label: '1P New Shop',   kw: 'new shop' },
+      { key: 'ex',    label: '1P Existing',   kw: 'existing shop' },
+    ];
+    const newOpsPerson = () => ({
+      name: '', active: 0, blocked: 0, adjDays: [], rawDays: [],
+      types: { p3p: {adj:[],raw:[]}, new_: {adj:[],raw:[]}, ex_: {adj:[],raw:[]} },
+    });
+    const bucketByType = (p, t) => {
+      const bt = (obGetCF(t, OB_CF.brandType) || '').toLowerCase();
+      const adj = t._adjDays, raw = t._rawDays;
+      if (bt.includes('3p'))            { if (adj!=null&&adj>0) p.types.p3p.adj.push(adj); if (raw!=null&&raw>0) p.types.p3p.raw.push(raw); }
+      if (bt.includes('new shop'))      { if (adj!=null&&adj>0) p.types.new_.adj.push(adj); if (raw!=null&&raw>0) p.types.new_.raw.push(raw); }
+      if (bt.includes('existing shop')) { if (adj!=null&&adj>0) p.types.ex_.adj.push(adj); if (raw!=null&&raw>0) p.types.ex_.raw.push(raw); }
+    };
     const opsMap = {};
     // Active brands
     tasks.forEach(t => {
       const name  = (t.assignee && t.assignee.name) || 'Unassigned';
       const first = name.split(' ')[0];
       if (!OB_TEAM_ORDER.includes(first)) return;
-      if (!opsMap[first]) opsMap[first] = { name, active: 0, blocked: 0, adjDays: [], rawDays: [] };
+      if (!opsMap[first]) opsMap[first] = newOpsPerson();
+      opsMap[first].name = name;
       opsMap[first].active++;
       if (obIsBlocked(t)) opsMap[first].blocked++;
       if (t._adjDays != null) opsMap[first].adjDays.push(t._adjDays);
       if (t._rawDays != null) opsMap[first].rawDays.push(t._rawDays);
+      bucketByType(opsMap[first], t);
     });
     // Completed brands — include in avg
     obDoneTasks.forEach(t => {
       const name  = (t.assignee && t.assignee.name) || 'Unassigned';
       const first = name.split(' ')[0];
       if (!OB_TEAM_ORDER.includes(first)) return;
-      if (!opsMap[first]) opsMap[first] = { name, active: 0, blocked: 0, adjDays: [], rawDays: [] };
+      if (!opsMap[first]) opsMap[first] = newOpsPerson();
+      opsMap[first].name = opsMap[first].name || name;
       if (t._adjDays != null) opsMap[first].adjDays.push(t._adjDays);
       if (t._rawDays != null) opsMap[first].rawDays.push(t._rawDays);
+      bucketByType(opsMap[first], t);
     });
+    const avgArr = arr => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
     const wlHtml = OB_TEAM_ORDER.map(first => {
       const p = opsMap[first];
       if (!p) {
@@ -1594,6 +1619,17 @@
       const avgAdj = adjArr.length ? Math.round(adjArr.reduce((a,b)=>a+b,0)/adjArr.length) : null;
       const avgRaw = rawArr.length ? Math.round(rawArr.reduce((a,b)=>a+b,0)/rawArr.length) : null;
       const adjClr = avgAdj==null?'#94a3b8':avgAdj<=20?'#16a34a':avgAdj<=35?'#f59e0b':'#ef4444';
+
+      const typeRows = [
+        { label: '3P',          b: p.types.p3p },
+        { label: '1P New Shop', b: p.types.new_ },
+        { label: '1P Existing', b: p.types.ex_ },
+      ].map(({label, b}) => {
+        const a = avgArr(b.adj), r = avgArr(b.raw);
+        if (a == null) return '';
+        return `<div class="ob-wl-type-row"><span class="ob-wl-type-lbl">${label}</span><span class="ob-wl-type-val">${a}d<span class="ob-wl-type-sub"> / ${r!=null?r+'d w/wait':'—'}</span></span></div>`;
+      }).join('');
+
       return `<div class="ob-wl-card ob-wl-card-v2 ${isSel?'ob-sel':''}" onclick="obToggleOps('${first}')">
         <div class="ob-wl-top">${obAvatar(p.name)}<span class="ob-wl-name">${first}</span></div>
         <div class="ob-wl-stats-v2">
@@ -1603,6 +1639,7 @@
           <div class="ob-wl-divider"></div>
           <div class="ob-wl-stat-v2"><span class="ob-wl-stat-lbl">Avg Adj</span><span class="ob-wl-val-v2 ob-wl-days" style="color:${adjClr}">${avgAdj!=null?avgAdj+'d':'—'}</span></div>
           <div class="ob-wl-stat-v2"><span class="ob-wl-stat-lbl">Avg Total</span><span class="ob-wl-val-v2" style="color:#64748b">${avgRaw!=null?avgRaw+'d':'—'}</span></div>
+          ${typeRows ? `<div class="ob-wl-divider"></div>${typeRows}` : ''}
         </div>
       </div>`;
     }).join('');
