@@ -163,6 +163,16 @@
     a { color:inherit;text-decoration:none; }
     a:hover { color:#6366f1; }
     .task-link { color:#0f172a;font-weight:500; }
+    /* P&G overview panel */
+    .pg-banner { display:flex;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(90deg,#1d4ed8,#0ea5e9);color:#fff;border-radius:12px;padding:14px 18px;margin-bottom:14px; }
+    .pg-banner h3 { margin:0;font-size:16px;font-weight:600; }
+    .pg-banner p  { margin:2px 0 0;font-size:12px;opacity:.85; }
+    .pg-via { display:inline-block;font-size:10px;padding:2px 7px;border-radius:999px;background:#e0f2fe;color:#0369a1;font-weight:600;letter-spacing:.02em; }
+    .pg-via.field { background:#dcfce7;color:#15803d; }
+    .pg-via.form, .pg-via.parent { background:#fef3c7;color:#b45309; }
+    .pg-delta-good { color:#10b981;font-weight:600; }
+    .pg-delta-bad  { color:#ef4444;font-weight:600; }
+    .pg-empty { padding:24px;text-align:center;color:#94a3b8;font-size:13px;background:#f8fafc;border:1px dashed #e2e8f0;border-radius:10px; }
     /* Token screen */
     #token-screen { display:none;position:fixed;inset:0;background:#0f172a;z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:24px; }
     .token-card { background:#1e293b;border-radius:16px;padding:40px;max-width:480px;width:100%;text-align:center; }
@@ -370,6 +380,7 @@
 <div class="tab-bar">
   <button class="tab-btn active" data-tab="ops"  onclick="switchTab('ops')">📋 TTS Operations</button>
   <button class="tab-btn"        data-tab="ob"   onclick="switchTab('ob')">🚀 Onboarding 2026</button>
+  <button class="tab-btn"        data-tab="pg"   onclick="switchTab('pg')">🧴 P&amp;G Onboarding Overview</button>
 </div>
 
 <!-- Loading -->
@@ -633,6 +644,49 @@
   </div>
 
   <div id="ob-content" style="display:none">
+
+    <!-- P&G overview (only visible on the P&G tab) -->
+    <div id="pg-panel" style="display:none">
+      <div class="pg-banner">
+        <div>
+          <h3>Procter &amp; Gamble — onboarding portfolio</h3>
+          <p>Every panel below is the Onboarding 2026 dashboard scoped to P&amp;G brands only.</p>
+        </div>
+        <div style="text-align:right;font-size:12px;opacity:.9" id="pg-banner-meta"></div>
+      </div>
+      <div class="ob-summary-row">
+        <div class="stat-card c-blue">
+          <div class="lbl">P&amp;G Brands</div>
+          <div class="val" id="pg-s-total">—</div>
+          <div class="sub">tracked in Asana</div>
+        </div>
+        <div class="stat-card" style="border-color:#d1fae5">
+          <div class="lbl">Live</div>
+          <div class="val" id="pg-s-live" style="color:#10b981">—</div>
+          <div class="sub">final check / live</div>
+        </div>
+        <div class="stat-card" style="border-color:#e2e8f0">
+          <div class="lbl">In Pipeline</div>
+          <div class="val" id="pg-s-active" style="color:#334155">—</div>
+          <div class="sub">not yet live</div>
+        </div>
+        <div class="stat-card" style="border-color:#fee2e2">
+          <div class="lbl">Blocked</div>
+          <div class="val" id="pg-s-blocked" style="color:#ef4444">—</div>
+          <div class="sub">waiting / blocked</div>
+        </div>
+        <div class="stat-card" style="border-color:#ede9fe">
+          <div class="lbl">P&amp;G Avg Days</div>
+          <div class="val" id="pg-s-avg" style="color:#7c3aed">—</div>
+          <div class="sub">vs <span id="pg-s-avg-all" style="color:#94a3b8">—</span> all brands</div>
+        </div>
+      </div>
+      <div class="ob-panel" style="margin-top:12px">
+        <div class="ob-panel-title">P&amp;G brand timeline <span style="color:#94a3b8;font-size:10px;text-transform:none;letter-spacing:0">(adj days vs. all-brand average)</span></div>
+        <div id="pg-table-wrap"></div>
+      </div>
+      <div class="ob-panel-title" style="margin:18px 0 10px">Pipeline detail (scoped to P&amp;G)</div>
+    </div>
 
     <!-- Pipeline flow -->
     <div class="ob-flow" id="ob-flow"></div>
@@ -1063,9 +1117,56 @@
   };
 
   let obLoaded      = false;
-  let obActiveTasks = [];
+  let obActiveTasks = [];   // current scope (all brands, or P&G only)
   let obDoneTasks   = [];
   let obLiveTasks   = [];
+  let obAllActive   = [];   // master copies, loaded once from Asana
+  let obAllDone     = [];
+  let obAllLive     = [];
+  let obScope       = 'all'; // 'all' | 'pg'
+
+  /* ── P&G parent-company detection ──
+     Asana has no "Parent Company" field yet, so brands are resolved in this order:
+       1. a custom field whose NAME contains "parent" (auto-picked up if one is added to Asana later)
+       2. the Asana parent task name (if brands are ever nested under a "P&G" task)
+       3. the intake-form line "Brand Name ( Parent Brand Name … )" in the task description
+       4. the P&G brand registry below (brand name match)                                     */
+  const PG_PATTERN = /p\s*&\s*g|procter/i;
+  const PG_BRANDS = [
+    'Head & Shoulders','Secret','Old Spice','Olay','Gain','Tide','Pampers','Luvs','Gillette','Venus','Braun',
+    'Crest','Oral-B','Scope','Dawn','Cascade','Bounty','Charmin','Puffs','Febreze','Downy','Bounce','Swiffer',
+    'Mr. Clean','Pantene','Herbal Essences','Aussie','Native','Vicks','ZzzQuil','NyQuil','DayQuil','Pepto-Bismol',
+    'Metamucil','Prilosec','Align','Always','Tampax','SK-II','Safeguard','Ivory','Zevo','Tampax','Nervive',
+  ];
+  const pgNorm = s => (s || '').toLowerCase().replace(/&/g,' and ').replace(/[^a-z0-9]+/g,' ').trim();
+  const PG_BRANDS_NORM = PG_BRANDS.map(pgNorm);
+  function obParentCompany(task) {
+    // 1. custom field named like "Parent Company" / "Parent Brand"
+    const cf = (task.custom_fields || []).find(c => /parent/i.test(c.name || ''));
+    const cfVal = cf ? (cf.display_value || cf.text_value || '') : '';
+    if (cfVal && PG_PATTERN.test(cfVal)) return { company: 'P&G', via: 'field' };
+    // 2. parent task
+    if (task.parent && task.parent.name && PG_PATTERN.test(task.parent.name)) return { company: 'P&G', via: 'parent' };
+    // 3. intake-form answer under "Brand Name ( Parent Brand Name … )"
+    const m = /parent brand name[^\n]*\n\s*([^\n]+)/i.exec(task.notes || '');
+    if (m && PG_PATTERN.test(m[1])) return { company: 'P&G', via: 'form' };
+    // 4. brand registry
+    const bn = pgNorm(obGetCF(task, OB_CF.brandName) || task.name);
+    if (bn && PG_BRANDS_NORM.some(b => bn === b || bn.startsWith(b + ' '))) return { company: 'P&G', via: 'registry' };
+    return { company: null, via: null };
+  }
+  const obIsPG = t => obParentCompany(t).company === 'P&G';
+
+  function obApplyScope() {
+    const keep = obScope === 'pg' ? obIsPG : (() => true);
+    obActiveTasks = obAllActive.filter(keep);
+    obDoneTasks   = obAllDone.filter(keep);
+    obLiveTasks   = obAllLive.filter(keep);
+  }
+  function obResetFilters() {
+    obStatusFilter = 'all'; obTypeFilter = null; obStageFilter = null;
+    obBlockerFilter = null;  obOpsFilter  = null;
+  }
   let obStatusFilter = 'all';
   let obTypeFilter   = null;
   let obStageFilter  = null;
@@ -1085,7 +1186,12 @@
     } else {
       opsEl.style.display = 'none';
       obEl.style.display  = 'block';
-      if (!obLoaded) loadOnboardingData();
+      const newScope = tab === 'pg' ? 'pg' : 'all';
+      const scopeChanged = newScope !== obScope;
+      obScope = newScope;
+      document.getElementById('pg-panel').style.display = obScope === 'pg' ? 'block' : 'none';
+      if (!obLoaded) { loadOnboardingData(); return; }
+      if (scopeChanged) { obResetFilters(); obApplyScope(); renderOnboarding(); }
     }
   }
 
@@ -1304,7 +1410,7 @@
     document.getElementById('ob-loading').style.display = 'flex';
     document.getElementById('ob-content').style.display = 'none';
 
-    const OB_OPT = 'name,completed,completed_at,created_at,assignee.name,permalink_url,custom_fields.gid,custom_fields.display_value,custom_fields.text_value,custom_fields.number_value';
+    const OB_OPT = 'name,notes,parent.name,completed,completed_at,created_at,assignee.name,permalink_url,custom_fields.gid,custom_fields.name,custom_fields.display_value,custom_fields.text_value,custom_fields.number_value';
     try {
       // Step 1: Fetch tasks from all sections
       if (loadingSpan) loadingSpan.textContent = 'Loading brands…';
@@ -1328,6 +1434,7 @@
       obLiveTasks = allDone.filter(t => t._sectionId === LIVE_SEC_ID);
       // All completed brands go to Done; Live brands also appear in Completed section
       obDoneTasks = allDone;
+      obAllActive = obActiveTasks; obAllDone = obDoneTasks; obAllLive = obLiveTasks;
 
       // Step 2: For each brand past Day 0 Setup, fetch task stories to find the exact
       //         date it entered "Requirements Received?" — that's the true onboarding start.
@@ -1394,6 +1501,7 @@
           `Calculating pipeline days… (${Math.min(i + CHUNK, needStories.length)}/${needStories.length})`;
       }
 
+      obApplyScope();
       renderOnboarding();
       document.getElementById('ob-loading').style.display = 'none';
       document.getElementById('ob-content').style.display = 'block';
@@ -1405,8 +1513,62 @@
   /* ── Stat + stat setter ── */
   function obSet(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
 
+  /* ── P&G overview panel (uses master arrays for the all-brand baseline) ── */
+  function renderPGPanel() {
+    if (obScope !== 'pg') return;
+    const LIVE_ID = '1213232688489808', BLOCKED_ID = '1213232688489805';
+    const pgAll   = [...obActiveTasks, ...obDoneTasks];
+    const allAll  = [...obAllActive, ...obAllDone];
+    const avg = list => { const d = list.map(t => obGetDays(t)).filter(x => x != null && x > 0);
+                          return d.length ? Math.round(d.reduce((a,b)=>a+b,0)/d.length) : null; };
+    const pgAvg = avg(pgAll), allAvg = avg(allAll);
+    obSet('pg-s-total',   pgAll.length);
+    obSet('pg-s-live',    pgAll.filter(t => t._sectionId === LIVE_ID).length);
+    obSet('pg-s-active',  obActiveTasks.filter(t => t._sectionId !== LIVE_ID).length);
+    obSet('pg-s-blocked', obActiveTasks.filter(t => t._sectionId === BLOCKED_ID || obIsBlocked(t)).length);
+    obSet('pg-s-avg',     pgAvg != null ? pgAvg + 'd' : '—');
+    obSet('pg-s-avg-all', allAvg != null ? allAvg + 'd' : '—');
+    obSet('pg-banner-meta', `${pgAll.length} of ${allAll.length} onboarding brands`);
+
+    const wrap = document.getElementById('pg-table-wrap');
+    if (!pgAll.length) {
+      wrap.innerHTML = '<div class="pg-empty">No P&amp;G brands detected in the Onboarding project yet.<br>Brands are matched by a "Parent Company" field, the intake-form parent line, or the P&amp;G brand registry.</div>';
+      return;
+    }
+    const rows = pgAll
+      .sort((a,b) => (obGetCF(a,OB_CF.dateSigned)||'').localeCompare(obGetCF(b,OB_CF.dateSigned)||''))
+      .map(t => {
+        const bn   = obGetCF(t, OB_CF.brandName) || t.name;
+        const bt   = obGetCF(t, OB_CF.brandType) || '—';
+        const rep  = obGetCF(t, OB_CF.salesRep)  || '—';
+        const ds   = obGetCF(t, OB_CF.dateSigned);
+        const dsF  = ds ? new Date(ds).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+        const days = obGetDays(t), raw = t._rawDays;
+        const delta = (days != null && allAvg != null) ? days - allAvg : null;
+        const deltaHtml = delta == null ? '<span style="color:#94a3b8">—</span>'
+          : delta <= 0 ? `<span class="pg-delta-good">${delta}d faster</span>` : `<span class="pg-delta-bad">+${delta}d slower</span>`;
+        const via  = obParentCompany(t).via || '—';
+        const stage = t.completed && t._sectionId === LIVE_ID ? '✅ Live' : t._sectionName;
+        const bnSafe = (bn||'').replace(/`/g,"'");
+        return `<tr onclick="window.open('${t.permalink_url||'#'}','_blank')" style="cursor:pointer">
+          <td style="font-weight:600">${escHtml(bn)}</td>
+          <td>${escHtml(bt)}</td>
+          <td>${escHtml(stage)}</td>
+          <td>${escHtml(rep)}</td>
+          <td>${dsF}</td>
+          <td>${days != null ? `<span class="ob-days ${obDaysCls(days)}">${days}d</span>` : '—'}${raw ? `<span style="color:#94a3b8;font-size:11px"> / ${raw}d</span>` : ''}</td>
+          <td>${deltaHtml}</td>
+          <td><span class="pg-via ${via}">${via}</span></td>
+        </tr>`;
+      }).join('');
+    wrap.innerHTML = `<div style="overflow-x:auto"><table class="ob-brands-table" style="margin-bottom:0">
+      <thead><tr><th>Brand</th><th>Type</th><th>Stage</th><th>Sales Rep</th><th>Signed</th><th>Days (adj / raw)</th><th>vs all brands</th><th>Detected via</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>`;
+  }
+
   /* ── Main render ── */
   function renderOnboarding() {
+    renderPGPanel();
     const tasks = obActiveTasks;
 
     /* 1. Stage counts for flow + bars */
